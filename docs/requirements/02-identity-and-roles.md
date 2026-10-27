@@ -78,6 +78,7 @@ flowchart TD
 ### 2.3 Comunidad Residencial (Por Inmueble / Casa)
 * **Propietario (Owner):**
   - Titular legítimo de la casa (**exactamente 1 por inmueble**).
+  - Identificado obligatoriamente por su documento de identidad: CUI/DPI (13 dígitos con validación por algoritmo Módulo 11) o Pasaporte válido si es extranjero.
   - **Financiero:** Visualización y descarga de estados de cuenta de su casa, recepción de notificaciones de cobro, subida de comprobantes de pago.
   - **Gobernanza:** Derecho exclusivo de emisión de voto en asambleas (1 voto por casa).
   - **Gestión:** Creación y gestión del usuario Inquilino de su propiedad.

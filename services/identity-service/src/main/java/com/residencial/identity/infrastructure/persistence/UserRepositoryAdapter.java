@@ -9,11 +9,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Component
-public class UsuarioRepositoryAdapter implements UserRepository {
+public class UserRepositoryAdapter implements UserRepository {
 
     private final JpaUserRepository jpaUserRepository;
 
-    public UsuarioRepositoryAdapter(JpaUserRepository jpaUserRepository) {
+    public UserRepositoryAdapter(JpaUserRepository jpaUserRepository) {
         this.jpaUserRepository = jpaUserRepository;
     }
 

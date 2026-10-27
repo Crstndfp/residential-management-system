@@ -111,8 +111,8 @@ classDiagram
 - **RF-01.3:** Control de sesiones según rol (`Admin`, `Propietario`, `UsuarioConsulta`).
 
 ### RF-02: Gestión Residencial y Asignación de Unidades
-- **RF-02.1:** CRUD de Unidades/Casas (número, manzana/calle, coeficiente de copropiedad opcional).
-- **RF-02.2:** Vinculación de 1 Propietario por casa.
+- **RF-02.1:** CRUD de Unidades/Casas (número identificador, manzana o calle).
+- **RF-02.2:** Vinculación de 1 Propietario por casa con documento de identificación (CUI/DPI 13 dígitos con algoritmo Módulo 11 para guatemaltecos, o Pasaporte para extranjeros).
 - **RF-02.3:** Alta/baja del usuario secundario de consulta asociado a la casa.
 
 ### RF-03: Módulo Financiero y Contabilidad Diaria
@@ -209,6 +209,6 @@ classDiagram
    - ¿Reservar áreas comunes?
    - ¿Votar en asambleas? (En muchas legislaciones de propiedad horizontal, solo votan quienes están al día).
 2. **Método de Cómputo de Votos en Asambleas:**
-   - ¿Cada casa representa **1 voto idéntico**, o el voto tiene un peso porcentual según el **coeficiente de copropiedad (m²)** de la casa?
+   - Cada casa representa exactamente **1 voto idéntico e inmutable** emitido exclusivamente por el Propietario.
 3. **Flujo de Pagos:**
    - Cuando el residente paga la cuota de mantenimiento, ¿va a subir la foto/comprobante de transferencia desde la app móvil para que el administrador la apruebe en la Web? (Esto agiliza mucho el trabajo contable).

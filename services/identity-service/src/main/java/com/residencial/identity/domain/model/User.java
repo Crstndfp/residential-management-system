@@ -16,6 +16,9 @@ public class User {
     @JoinColumn(name = "house_id")
     private House house;
 
+    @Embedded
+    private IdentificationDocument identificationDocument;
+
     @Column(nullable = false, unique = true, length = 100)
     private String email;
 
@@ -40,10 +43,23 @@ public class User {
         // JPA constructor
     }
 
-    public User(House house, String email, String fullName, ResidentialRole residentialRole) {
+    public User(House house, IdentificationDocument identificationDocument, String email, String fullName, ResidentialRole residentialRole) {
+        if (email == null || email.trim().isEmpty()) {
+            throw new IllegalArgumentException("Email cannot be empty.");
+        }
+        if (fullName == null || fullName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Full name cannot be empty.");
+        }
+        if (identificationDocument == null) {
+            throw new IllegalArgumentException("Identification document cannot be null.");
+        }
+        if (residentialRole == null) {
+            throw new IllegalArgumentException("Residential role cannot be null.");
+        }
         this.house = house;
-        this.email = email;
-        this.fullName = fullName;
+        this.identificationDocument = identificationDocument;
+        this.email = email.trim().toLowerCase();
+        this.fullName = fullName.trim();
         this.residentialRole = residentialRole;
         this.boardRole = BoardRole.NONE;
         this.isActive = true;
@@ -63,6 +79,10 @@ public class User {
 
     public House getHouse() {
         return house;
+    }
+
+    public IdentificationDocument getIdentificationDocument() {
+        return identificationDocument;
     }
 
     public String getEmail() {

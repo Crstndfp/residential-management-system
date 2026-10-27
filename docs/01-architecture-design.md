@@ -189,7 +189,6 @@ erDiagram
         uuid id PK
         varchar_20 numero_identificador
         varchar_30 manzana_o_calle
-        numeric_5_2 coeficiente_copropiedad
         smallint estado
         timestamptz created_at
     }
@@ -197,6 +196,8 @@ erDiagram
     USUARIOS {
         uuid id PK
         uuid casa_id FK
+        varchar_20 id_type
+        varchar_30 id_number
         varchar_100 email
         varchar_100 nombre_completo
         varchar_255 password_hash

@@ -1,7 +1,6 @@
 package com.residencial.identity.domain.model;
 
 import jakarta.persistence.*;
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -19,9 +18,6 @@ public class House {
     @Column(name = "street_or_block", nullable = false, length = 30)
     private String streetOrBlock;
 
-    @Column(name = "ownership_ratio", precision = 5, scale = 2)
-    private BigDecimal ownershipRatio;
-
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -29,10 +25,15 @@ public class House {
         // JPA constructor
     }
 
-    public House(String houseNumber, String streetOrBlock, BigDecimal ownershipRatio) {
-        this.houseNumber = houseNumber;
-        this.streetOrBlock = streetOrBlock;
-        this.ownershipRatio = ownershipRatio != null ? ownershipRatio : BigDecimal.ONE;
+    public House(String houseNumber, String streetOrBlock) {
+        if (houseNumber == null || houseNumber.trim().isEmpty()) {
+            throw new IllegalArgumentException("House number cannot be empty.");
+        }
+        if (streetOrBlock == null || streetOrBlock.trim().isEmpty()) {
+            throw new IllegalArgumentException("Street or block cannot be empty.");
+        }
+        this.houseNumber = houseNumber.trim();
+        this.streetOrBlock = streetOrBlock.trim();
         this.createdAt = Instant.now();
     }
 
@@ -46,10 +47,6 @@ public class House {
 
     public String getStreetOrBlock() {
         return streetOrBlock;
-    }
-
-    public BigDecimal getOwnershipRatio() {
-        return ownershipRatio;
     }
 
     public Instant getCreatedAt() {
