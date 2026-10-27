@@ -48,12 +48,13 @@ This document defines the strict engineering standards, architectural patterns, 
 
 ---
 
-## 4. Code Quality, Testing & Review Gate
-- **Show Code First:** Never apply major refactors or commit sweeping architectural changes without presenting the proposed diffs and design trade-offs to the user/reviewer first.
+## 4. Autonomous Execution, Quality & Testing Gate
+- **Autonomous Execution:** Agents have full autonomy to create, edit, and delete files inside this project without blocking for code approval.
+- **Architectural Rationale First (What & Why):** Before executing a task or User Story, briefly explain **what** components/files will be worked on and the architectural/business **why** behind those decisions. Do not block asking to review raw code snippets unless explicitly requested by the user.
 - **Mandatory Unit Tests:**
   - Every domain model, entity invariant, application use-case, and validator MUST have unit tests.
   - Run test suites before committing (`mvn test` / `./mvnw test`).
-  - Never push or mark a task complete with failing tests.
+  - Never finish a task or push with failing tests.
 - **Error Handling & Localization:**
-  - Domain exceptions must carry explicit error codes and localized error messages.
+  - Domain exceptions must carry explicit error codes and meaningful messages.
   - Return standardized REST error responses (RFC 7807 Problem Details).
