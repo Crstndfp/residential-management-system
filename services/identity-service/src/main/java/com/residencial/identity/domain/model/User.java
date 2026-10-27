@@ -56,6 +56,7 @@ public class User {
         if (residentialRole == null) {
             throw new IllegalArgumentException("Residential role cannot be null.");
         }
+        this.id = UUID.randomUUID();
         this.house = house;
         this.identificationDocument = identificationDocument;
         this.email = email.trim().toLowerCase();

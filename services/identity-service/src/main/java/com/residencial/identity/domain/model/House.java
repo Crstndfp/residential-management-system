@@ -32,6 +32,7 @@ public class House {
         if (streetOrBlock == null || streetOrBlock.trim().isEmpty()) {
             throw new IllegalArgumentException("Street or block cannot be empty.");
         }
+        this.id = UUID.randomUUID();
         this.houseNumber = houseNumber.trim();
         this.streetOrBlock = streetOrBlock.trim();
         this.createdAt = Instant.now();
