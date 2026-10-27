@@ -33,6 +33,9 @@ public class User {
     @Column(name = "board_role", nullable = false, length = 30)
     private BoardRole boardRole;
 
+    @Column(name = "password_hash", length = 255)
+    private String passwordHash;
+
     @Column(name = "is_active", nullable = false)
     private boolean isActive;
 
@@ -63,8 +66,17 @@ public class User {
         this.fullName = fullName.trim();
         this.residentialRole = residentialRole;
         this.boardRole = BoardRole.NONE;
-        this.isActive = true;
+        this.passwordHash = null;
+        this.isActive = false; // Account starts inactive until activated via invitation token
         this.createdAt = Instant.now();
+    }
+
+    public void activateAccount(String passwordHash) {
+        if (passwordHash == null || passwordHash.trim().isEmpty()) {
+            throw new IllegalArgumentException("Password hash cannot be empty.");
+        }
+        this.passwordHash = passwordHash;
+        this.isActive = true;
     }
 
     public void assignBoardRole(BoardRole role) {
@@ -92,6 +104,10 @@ public class User {
 
     public String getFullName() {
         return fullName;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
     }
 
     public ResidentialRole getResidentialRole() {

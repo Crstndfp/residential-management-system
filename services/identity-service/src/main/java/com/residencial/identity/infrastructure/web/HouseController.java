@@ -16,15 +16,27 @@ import org.springframework.web.bind.annotation.RestController;
 public class HouseController {
 
     private final RegisterHouseWithOwnerUseCase registerHouseWithOwnerUseCase;
+    private final com.residencial.identity.application.usecase.CreateTenantUseCase createTenantUseCase;
 
-    public HouseController(RegisterHouseWithOwnerUseCase registerHouseWithOwnerUseCase) {
+    public HouseController(
+            RegisterHouseWithOwnerUseCase registerHouseWithOwnerUseCase,
+            com.residencial.identity.application.usecase.CreateTenantUseCase createTenantUseCase) {
         this.registerHouseWithOwnerUseCase = registerHouseWithOwnerUseCase;
+        this.createTenantUseCase = createTenantUseCase;
     }
 
     @PostMapping("/register-owner")
     public ResponseEntity<RegisterHouseWithOwnerResponse> registerHouseWithOwner(
             @Valid @RequestBody RegisterHouseWithOwnerRequest request) {
         RegisterHouseWithOwnerResponse response = registerHouseWithOwnerUseCase.execute(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/{houseId}/tenants")
+    public ResponseEntity<com.residencial.identity.application.dto.CreateTenantResponse> createTenant(
+            @org.springframework.web.bind.annotation.PathVariable java.util.UUID houseId,
+            @Valid @RequestBody com.residencial.identity.application.dto.CreateTenantRequest request) {
+        com.residencial.identity.application.dto.CreateTenantResponse response = createTenantUseCase.execute(houseId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }
