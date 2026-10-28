@@ -45,6 +45,24 @@ services:
     networks:
       - residencial-network
 
+  parking-service:
+    build:
+      context: ./services/parking-service
+      dockerfile: Dockerfile
+    container_name: residencial-parking-service
+    restart: always
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/residencial_db?currentSchema=parking_schema
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgrespassword
+      SERVER_PORT: 8084
+    ports:
+      - "8084:8084"
+    depends_on:
+      - postgres
+    networks:
+      - residencial-network
+
   api-gateway:
     image: nginx:alpine
     container_name: residencial-gateway
