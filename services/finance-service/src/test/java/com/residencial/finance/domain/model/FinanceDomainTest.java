@@ -140,4 +140,74 @@ class FinanceDomainTest {
         assertThrows(IllegalArgumentException.class, () -> new FineType("CODE", "Name", null, BigDecimal.ZERO));
         assertThrows(IllegalArgumentException.class, () -> new FineType("CODE", "Name", null, new BigDecimal("-50.00")));
     }
+
+    // =========================================================================
+    // US-205 Domain Invariants: FixedAsset & AssetStatusHistory
+    // =========================================================================
+
+    @Test
+    @DisplayName("FixedAsset Invariant: Creation, code uppercase normalization and status update")
+    void testFixedAssetLifecycle() {
+        FixedAsset asset = new FixedAsset(
+                "  act-pump-01  ",
+                "  Bomba de Agua 10HP  ",
+                AssetCategory.FACILITY_EQUIPMENT,
+                "  Tanque Principal  ",
+                new BigDecimal("15000.00"),
+                LocalDate.of(2026, 1, 15),
+                AssetStatus.EXCELLENT,
+                "  Nueva instalación  "
+        );
+
+        assertNotNull(asset.getId());
+        assertEquals("ACT-PUMP-01", asset.getCode());
+        assertEquals("Bomba de Agua 10HP", asset.getName());
+        assertEquals(AssetCategory.FACILITY_EQUIPMENT, asset.getCategory());
+        assertEquals("Tanque Principal", asset.getPhysicalLocation());
+        assertEquals(new BigDecimal("15000.00"), asset.getAcquisitionCost());
+        assertEquals(AssetStatus.EXCELLENT, asset.getStatus());
+        assertEquals("Nueva instalación", asset.getNotes());
+
+        asset.updateStatus(AssetStatus.NEEDS_MAINTENANCE, "Mantenimiento preventivo anual");
+        assertEquals(AssetStatus.NEEDS_MAINTENANCE, asset.getStatus());
+        assertEquals("Mantenimiento preventivo anual", asset.getNotes());
+    }
+
+    @Test
+    @DisplayName("FixedAsset Invariant: Validation on construction")
+    void testFixedAssetValidation() {
+        LocalDate now = LocalDate.now();
+        BigDecimal cost = new BigDecimal("100.00");
+
+        assertThrows(IllegalArgumentException.class, () -> new FixedAsset(null, "Name", AssetCategory.SECURITY, "Loc", cost, now, null, null));
+        assertThrows(IllegalArgumentException.class, () -> new FixedAsset("  ", "Name", AssetCategory.SECURITY, "Loc", cost, now, null, null));
+        assertThrows(IllegalArgumentException.class, () -> new FixedAsset("CODE", null, AssetCategory.SECURITY, "Loc", cost, now, null, null));
+        assertThrows(IllegalArgumentException.class, () -> new FixedAsset("CODE", "  ", AssetCategory.SECURITY, "Loc", cost, now, null, null));
+        assertThrows(IllegalArgumentException.class, () -> new FixedAsset("CODE", "Name", null, "Loc", cost, now, null, null));
+        assertThrows(IllegalArgumentException.class, () -> new FixedAsset("CODE", "Name", AssetCategory.SECURITY, null, cost, now, null, null));
+        assertThrows(IllegalArgumentException.class, () -> new FixedAsset("CODE", "Name", AssetCategory.SECURITY, "   ", cost, now, null, null));
+        assertThrows(IllegalArgumentException.class, () -> new FixedAsset("CODE", "Name", AssetCategory.SECURITY, "Loc", null, now, null, null));
+        assertThrows(IllegalArgumentException.class, () -> new FixedAsset("CODE", "Name", AssetCategory.SECURITY, "Loc", BigDecimal.ZERO, now, null, null));
+        assertThrows(IllegalArgumentException.class, () -> new FixedAsset("CODE", "Name", AssetCategory.SECURITY, "Loc", new BigDecimal("-10"), now, null, null));
+        assertThrows(IllegalArgumentException.class, () -> new FixedAsset("CODE", "Name", AssetCategory.SECURITY, "Loc", cost, null, null, null));
+    }
+
+    @Test
+    @DisplayName("AssetStatusHistory Invariant: Validation on construction")
+    void testAssetStatusHistoryValidation() {
+        FixedAsset asset = new FixedAsset("C1", "N1", AssetCategory.SECURITY, "L1", new BigDecimal("100"), LocalDate.now(), null, null);
+
+        assertThrows(IllegalArgumentException.class, () -> new AssetStatusHistory(null, AssetStatus.EXCELLENT, AssetStatus.DAMAGED, "Roto", null));
+        assertThrows(IllegalArgumentException.class, () -> new AssetStatusHistory(asset, null, AssetStatus.DAMAGED, "Roto", null));
+        assertThrows(IllegalArgumentException.class, () -> new AssetStatusHistory(asset, AssetStatus.EXCELLENT, null, "Roto", null));
+        assertThrows(IllegalArgumentException.class, () -> new AssetStatusHistory(asset, AssetStatus.EXCELLENT, AssetStatus.DAMAGED, null, null));
+        assertThrows(IllegalArgumentException.class, () -> new AssetStatusHistory(asset, AssetStatus.EXCELLENT, AssetStatus.DAMAGED, "   ", null));
+
+        AssetStatusHistory history = new AssetStatusHistory(asset, AssetStatus.EXCELLENT, AssetStatus.DAMAGED, "Golpe en garita", null);
+        assertNotNull(history.getId());
+        assertEquals(asset, history.getAsset());
+        assertEquals(AssetStatus.EXCELLENT, history.getPreviousStatus());
+        assertEquals(AssetStatus.DAMAGED, history.getNewStatus());
+        assertEquals("Golpe en garita", history.getReason());
+    }
 }

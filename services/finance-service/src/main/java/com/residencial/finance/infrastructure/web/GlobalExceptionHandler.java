@@ -1,5 +1,7 @@
 package com.residencial.finance.infrastructure.web;
 
+import com.residencial.finance.domain.exception.AssetNotFoundException;
+import com.residencial.finance.domain.exception.DuplicateAssetCodeException;
 import com.residencial.finance.domain.exception.FinanceDomainException;
 import com.residencial.finance.domain.exception.TenantStatementAccessException;
 import org.springframework.http.HttpStatus;
@@ -15,6 +17,24 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(DuplicateAssetCodeException.class)
+    public ProblemDetail handleDuplicateAssetCodeException(DuplicateAssetCodeException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        problemDetail.setTitle("Duplicate Asset Code");
+        problemDetail.setType(URI.create("urn:problem-type:duplicate-asset-code"));
+        problemDetail.setProperty("errorCode", ex.getErrorCode());
+        return problemDetail;
+    }
+
+    @ExceptionHandler(AssetNotFoundException.class)
+    public ProblemDetail handleAssetNotFoundException(AssetNotFoundException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+        problemDetail.setTitle("Asset Not Found");
+        problemDetail.setType(URI.create("urn:problem-type:asset-not-found"));
+        problemDetail.setProperty("errorCode", ex.getErrorCode());
+        return problemDetail;
+    }
 
     @ExceptionHandler(TenantStatementAccessException.class)
     public ProblemDetail handleTenantStatementAccessException(TenantStatementAccessException ex) {
