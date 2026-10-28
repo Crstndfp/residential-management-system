@@ -42,6 +42,24 @@ public class GlobalExceptionHandler {
         return problemDetail;
     }
 
+    @ExceptionHandler(TicketNotFoundException.class)
+    public ProblemDetail handleTicketNotFound(TicketNotFoundException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+        problemDetail.setTitle("Ticket Not Found");
+        problemDetail.setType(URI.create("urn:problem-type:ticket-not-found"));
+        problemDetail.setProperty("errorCode", ex.getErrorCode());
+        return problemDetail;
+    }
+
+    @ExceptionHandler(InvalidTicketStatusTransitionException.class)
+    public ProblemDetail handleInvalidTicketStatusTransition(InvalidTicketStatusTransitionException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        problemDetail.setTitle("Invalid Ticket Status Transition");
+        problemDetail.setType(URI.create("urn:problem-type:invalid-ticket-status-transition"));
+        problemDetail.setProperty("errorCode", ex.getErrorCode());
+        return problemDetail;
+    }
+
     @ExceptionHandler(DuplicateAmenityCodeException.class)
     public ProblemDetail handleDuplicateAmenityCode(DuplicateAmenityCodeException ex) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
