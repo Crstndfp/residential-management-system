@@ -1,6 +1,7 @@
 package com.residencial.finance.infrastructure.web;
 
 import com.residencial.finance.domain.exception.FinanceDomainException;
+import com.residencial.finance.domain.exception.TenantStatementAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.validation.FieldError;
@@ -14,6 +15,15 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(TenantStatementAccessException.class)
+    public ProblemDetail handleTenantStatementAccessException(TenantStatementAccessException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
+        problemDetail.setTitle("Access Forbidden");
+        problemDetail.setType(URI.create("urn:problem-type:tenant-access-forbidden"));
+        problemDetail.setProperty("errorCode", ex.getErrorCode());
+        return problemDetail;
+    }
 
     @ExceptionHandler(FinanceDomainException.class)
     public ProblemDetail handleDomainException(FinanceDomainException ex) {

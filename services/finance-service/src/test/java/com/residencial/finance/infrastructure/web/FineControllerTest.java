@@ -119,4 +119,64 @@ class FineControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errorCode").value("FINE_TYPE_NOT_FOUND"));
     }
+
+    @Test
+    @DisplayName("TC-203-02: Successfully apply fine with custom amount override")
+    void shouldApplyFineWithCustomAmountSuccessfully() throws Exception {
+        UUID fineId = UUID.randomUUID();
+        UUID houseId = UUID.randomUUID();
+        ApplyFineResponse response = new ApplyFineResponse(
+                fineId,
+                houseId,
+                "C-102",
+                "SPEEDING",
+                "Exceso de Velocidad",
+                new BigDecimal("750.00"),
+                "Conducción temeraria",
+                null,
+                FineStatus.PENDING,
+                Instant.now()
+        );
+
+        when(applyFineToHouseUseCase.execute(any(ApplyFineRequest.class))).thenReturn(response);
+
+        ApplyFineRequest request = new ApplyFineRequest(
+                houseId,
+                "C-102",
+                "SPEEDING",
+                new BigDecimal("750.00"),
+                "Conducción temeraria",
+                null,
+                null
+        );
+
+        mockMvc.perform(post("/api/v1/finance/fines")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.fineId").value(fineId.toString()))
+                .andExpect(jsonPath("$.houseNumber").value("C-102"))
+                .andExpect(jsonPath("$.amount").value(750.00));
+    }
+
+    @Test
+    @DisplayName("TC-203-05: Reject custom amount less than or equal to zero returns 400 Bad Request")
+    void shouldRejectNonPositiveCustomAmount() throws Exception {
+        ApplyFineRequest invalidRequest = new ApplyFineRequest(
+                UUID.randomUUID(),
+                "C-101",
+                "NOISE_VIOLATION",
+                new BigDecimal("-50.00"), // Negative custom amount
+                "Motivo",
+                null,
+                null
+        );
+
+        mockMvc.perform(post("/api/v1/finance/fines")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.title").value("Validation Error"))
+                .andExpect(jsonPath("$.errors.customAmount").exists());
+    }
 }

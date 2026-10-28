@@ -114,4 +114,26 @@ class ApplyFineToHouseUseCaseTest {
         assertThrows(FineTypeNotFoundException.class, () -> useCase.execute(request));
         verify(fineRepository, never()).save(any());
     }
+
+    @Test
+    @DisplayName("US-203: Reject fine when fine type exists but is inactive")
+    void shouldRejectWhenFineTypeIsInactive() {
+        FineType inactiveType = mock(FineType.class);
+        when(inactiveType.isActive()).thenReturn(false);
+
+        when(fineTypeRepository.findByCode("DEPRECATED_FINE")).thenReturn(Optional.of(inactiveType));
+
+        ApplyFineRequest request = new ApplyFineRequest(
+                UUID.randomUUID(),
+                "M-01 L-01",
+                "DEPRECATED_FINE",
+                null,
+                "Motivo",
+                null,
+                null
+        );
+
+        assertThrows(FineTypeNotFoundException.class, () -> useCase.execute(request));
+        verify(fineRepository, never()).save(any());
+    }
 }

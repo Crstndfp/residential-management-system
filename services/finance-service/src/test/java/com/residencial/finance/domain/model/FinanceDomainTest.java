@@ -63,4 +63,81 @@ class FinanceDomainTest {
         assertEquals(InvoiceStatus.PAID, invoice.getStatus());
         assertEquals(LocalDate.of(2026, 10, 25), invoice.getPaymentDate());
     }
+
+    // =========================================================================
+    // US-203 Domain Invariants: Fine & FineType
+    // =========================================================================
+
+    @Test
+    @DisplayName("Fine Invariant: Valid creation, default vs custom amount, and payment lifecycle")
+    void testFineLifecycle() {
+        java.util.UUID houseId = java.util.UUID.randomUUID();
+        FineType fineType = new FineType("NOISE_VIOLATION", "Ruidos Excesivos", "Musica alta", new BigDecimal("300.00"));
+
+        // Fine with default amount
+        Fine fine = new Fine(houseId, "M-05 L-12", fineType, null, "Fiesta en patio", null, null);
+        assertNotNull(fine.getId());
+        assertEquals(new BigDecimal("300.00"), fine.getAmount());
+        assertEquals(FineStatus.PENDING, fine.getStatus());
+        assertNull(fine.getPaidDate());
+
+        // Mark as paid
+        LocalDate payDate = LocalDate.of(2026, 10, 26);
+        fine.markAsPaid(payDate);
+        assertEquals(FineStatus.PAID, fine.getStatus());
+        assertEquals(payDate, fine.getPaidDate());
+
+        // Cannot dismiss a paid fine
+        assertThrows(IllegalStateException.class, () -> fine.dismiss("Justificacion tardia"));
+    }
+
+    @Test
+    @DisplayName("Fine Invariant: Dismissal lifecycle and restrictions")
+    void testFineDismissalLifecycle() {
+        java.util.UUID houseId = java.util.UUID.randomUUID();
+        FineType fineType = new FineType("PARKING_VIOLATION", "Mal Parqueado", "Bloqueo de rampa", new BigDecimal("200.00"));
+        Fine fine = new Fine(houseId, "M-01 L-01", fineType, new BigDecimal("250.00"), "Bloqueo de acera", null, null);
+
+        assertEquals(new BigDecimal("250.00"), fine.getAmount());
+
+        fine.dismiss("Error de guardia de garita al anotar placa");
+        assertEquals(FineStatus.DISMISSED, fine.getStatus());
+        assertTrue(fine.getReason().contains("Error de guardia"));
+
+        // Cannot pay a dismissed fine
+        assertThrows(IllegalStateException.class, () -> fine.markAsPaid(LocalDate.now()));
+    }
+
+    @Test
+    @DisplayName("Fine Invariant: Validation errors on missing required fields")
+    void testFineValidation() {
+        java.util.UUID houseId = java.util.UUID.randomUUID();
+        FineType fineType = new FineType("SPEEDING", "Velocidad", "Exceso", new BigDecimal("500.00"));
+
+        assertThrows(IllegalArgumentException.class, () -> new Fine(null, "M-01", fineType, null, "Motivo", null, null));
+        assertThrows(IllegalArgumentException.class, () -> new Fine(houseId, "   ", fineType, null, "Motivo", null, null));
+        assertThrows(IllegalArgumentException.class, () -> new Fine(houseId, "M-01", null, null, "Motivo", null, null));
+        assertThrows(IllegalArgumentException.class, () -> new Fine(houseId, "M-01", fineType, null, "   ", null, null));
+        assertThrows(IllegalArgumentException.class, () -> new Fine(houseId, "M-01", fineType, new BigDecimal("-10.00"), "Motivo", null, null));
+
+        Fine validFine = new Fine(houseId, "M-01", fineType, null, "Motivo", null, null);
+        assertThrows(IllegalArgumentException.class, () -> validFine.markAsPaid(null));
+    }
+
+    @Test
+    @DisplayName("FineType Invariant: Validation on construction")
+    void testFineTypeValidation() {
+        FineType type = new FineType("noise", " Ruidos ", "Exceso", new BigDecimal("300.00"));
+        assertEquals("NOISE", type.getCode());
+        assertEquals("Ruidos", type.getName());
+        assertTrue(type.isActive());
+
+        assertThrows(IllegalArgumentException.class, () -> new FineType(null, "Name", null, new BigDecimal("100.00")));
+        assertThrows(IllegalArgumentException.class, () -> new FineType("   ", "Name", null, new BigDecimal("100.00")));
+        assertThrows(IllegalArgumentException.class, () -> new FineType("CODE", null, null, new BigDecimal("100.00")));
+        assertThrows(IllegalArgumentException.class, () -> new FineType("CODE", "  ", null, new BigDecimal("100.00")));
+        assertThrows(IllegalArgumentException.class, () -> new FineType("CODE", "Name", null, null));
+        assertThrows(IllegalArgumentException.class, () -> new FineType("CODE", "Name", null, BigDecimal.ZERO));
+        assertThrows(IllegalArgumentException.class, () -> new FineType("CODE", "Name", null, new BigDecimal("-50.00")));
+    }
 }

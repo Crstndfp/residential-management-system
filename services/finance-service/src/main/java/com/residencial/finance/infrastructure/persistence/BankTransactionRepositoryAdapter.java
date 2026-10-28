@@ -30,4 +30,9 @@ public class BankTransactionRepositoryAdapter implements BankTransactionReposito
     public boolean existsByAuthorizationNumber(String authorizationNumber) {
         return jpaBankTransactionRepository.existsByAuthorizationNumber(authorizationNumber);
     }
+
+    @Override
+    public java.util.List<BankTransaction> findByHouseReference(String houseReference) {
+        return jpaBankTransactionRepository.findByHouseReference(houseReference);
+    }
 }

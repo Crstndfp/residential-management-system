@@ -30,4 +30,9 @@ public class MaintenanceChargeRepositoryAdapter implements MaintenanceChargeRepo
     public Optional<MaintenanceCharge> findPendingByHouseNumber(String houseNumber) {
         return jpaMaintenanceChargeRepository.findFirstPendingByHouseNumber(houseNumber);
     }
+
+    @Override
+    public java.util.List<MaintenanceCharge> findByHouseId(UUID houseId) {
+        return jpaMaintenanceChargeRepository.findByHouseId(houseId);
+    }
 }
