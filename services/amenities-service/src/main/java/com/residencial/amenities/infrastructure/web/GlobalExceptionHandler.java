@@ -1,10 +1,6 @@
 package com.residencial.amenities.infrastructure.web;
 
-import com.residencial.amenities.domain.exception.AmenitiesDomainException;
-import com.residencial.amenities.domain.exception.AmenityNotFoundException;
-import com.residencial.amenities.domain.exception.BookingConflictException;
-import com.residencial.amenities.domain.exception.DelinquentHouseException;
-import com.residencial.amenities.domain.exception.DuplicateAmenityCodeException;
+import com.residencial.amenities.domain.exception.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.validation.FieldError;
@@ -28,11 +24,38 @@ public class GlobalExceptionHandler {
         return problemDetail;
     }
 
+    @ExceptionHandler(AssemblyNotFoundException.class)
+    public ProblemDetail handleAssemblyNotFound(AssemblyNotFoundException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+        problemDetail.setTitle("Assembly Not Found");
+        problemDetail.setType(URI.create("urn:problem-type:assembly-not-found"));
+        problemDetail.setProperty("errorCode", ex.getErrorCode());
+        return problemDetail;
+    }
+
+    @ExceptionHandler(MotionNotFoundException.class)
+    public ProblemDetail handleMotionNotFound(MotionNotFoundException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+        problemDetail.setTitle("Motion Not Found");
+        problemDetail.setType(URI.create("urn:problem-type:motion-not-found"));
+        problemDetail.setProperty("errorCode", ex.getErrorCode());
+        return problemDetail;
+    }
+
     @ExceptionHandler(DuplicateAmenityCodeException.class)
     public ProblemDetail handleDuplicateAmenityCode(DuplicateAmenityCodeException ex) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
         problemDetail.setTitle("Duplicate Amenity Code");
         problemDetail.setType(URI.create("urn:problem-type:duplicate-amenity-code"));
+        problemDetail.setProperty("errorCode", ex.getErrorCode());
+        return problemDetail;
+    }
+
+    @ExceptionHandler(DuplicateVoteException.class)
+    public ProblemDetail handleDuplicateVote(DuplicateVoteException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        problemDetail.setTitle("Duplicate Vote Cast");
+        problemDetail.setType(URI.create("urn:problem-type:duplicate-vote-cast"));
         problemDetail.setProperty("errorCode", ex.getErrorCode());
         return problemDetail;
     }
@@ -51,6 +74,24 @@ public class GlobalExceptionHandler {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
         problemDetail.setTitle("House Delinquent - Booking Forbidden");
         problemDetail.setType(URI.create("urn:problem-type:delinquent-house-blocked"));
+        problemDetail.setProperty("errorCode", ex.getErrorCode());
+        return problemDetail;
+    }
+
+    @ExceptionHandler(TenantVotingForbiddenException.class)
+    public ProblemDetail handleTenantVotingForbidden(TenantVotingForbiddenException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
+        problemDetail.setTitle("Tenant Voting Forbidden");
+        problemDetail.setType(URI.create("urn:problem-type:tenant-voting-forbidden"));
+        problemDetail.setProperty("errorCode", ex.getErrorCode());
+        return problemDetail;
+    }
+
+    @ExceptionHandler(MotionNotOpenException.class)
+    public ProblemDetail handleMotionNotOpen(MotionNotOpenException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        problemDetail.setTitle("Motion Not Open");
+        problemDetail.setType(URI.create("urn:problem-type:motion-not-open"));
         problemDetail.setProperty("errorCode", ex.getErrorCode());
         return problemDetail;
     }
