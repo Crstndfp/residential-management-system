@@ -93,4 +93,39 @@ class ActivateAccountUseCaseTest {
         assertThrows(InvalidOrExpiredTokenException.class, () -> useCase.execute(request));
         verify(userRepository, never()).save(any());
     }
+
+    @Test
+    @DisplayName("US-102: Throw exception when token has expired beyond its 48-hour lifetime")
+    void shouldThrowWhenTokenIsExpired() {
+        UUID userId = UUID.randomUUID();
+        String rawToken = "expired-token-123";
+        // Create an invitation token and set expiration in the past via reflection or past instant
+        // Note: constructor requires future instant, but we can verify isValid() behavior or token mock
+        InvitationToken expiredToken = mock(InvitationToken.class);
+        when(expiredToken.isValid()).thenReturn(false);
+
+        when(invitationTokenRepository.findByToken(rawToken)).thenReturn(Optional.of(expiredToken));
+
+        ActivateAccountRequest request = new ActivateAccountRequest(rawToken, "SecretPassword123!");
+
+        assertThrows(InvalidOrExpiredTokenException.class, () -> useCase.execute(request));
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("US-102: Throw exception when user associated with token is not found")
+    void shouldThrowWhenUserNotFoundForValidToken() {
+        UUID nonExistentUserId = UUID.randomUUID();
+        String rawToken = "valid-token-no-user";
+        Instant futureExpiry = Instant.now().plus(24, ChronoUnit.HOURS);
+        InvitationToken token = new InvitationToken(nonExistentUserId, rawToken, futureExpiry);
+
+        when(invitationTokenRepository.findByToken(rawToken)).thenReturn(Optional.of(token));
+        when(userRepository.findById(nonExistentUserId)).thenReturn(Optional.empty());
+
+        ActivateAccountRequest request = new ActivateAccountRequest(rawToken, "SecretPassword123!");
+
+        assertThrows(InvalidOrExpiredTokenException.class, () -> useCase.execute(request));
+        verify(userRepository, never()).save(any());
+    }
 }

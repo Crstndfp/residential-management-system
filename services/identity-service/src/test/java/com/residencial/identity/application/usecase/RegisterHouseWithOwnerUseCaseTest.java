@@ -188,4 +188,34 @@ class RegisterHouseWithOwnerUseCaseTest {
         assertEquals("foreign.owner@example.com", response.ownerEmail());
         assertNotNull(response.invitationToken());
     }
+
+    @Test
+    @DisplayName("US-101: Invariant: Throw exception when house already has an assigned owner")
+    void shouldThrowWhenHouseAlreadyHasOwner() {
+        RegisterHouseWithOwnerRequest request = new RegisterHouseWithOwnerRequest(
+                "M-01 L-08",
+                "Main Boulevard",
+                IdentificationType.DPI,
+                VALID_DPI,
+                "second.owner@example.com",
+                "Maria Lopez"
+        );
+
+        when(houseRepository.existsByHouseNumber("M-01 L-08")).thenReturn(false);
+        when(userRepository.findByEmail("second.owner@example.com")).thenReturn(Optional.empty());
+
+        House savedHouse = new House("M-01 L-08", "Main Boulevard");
+        when(houseRepository.save(any(House.class))).thenReturn(savedHouse);
+        when(userRepository.existsByHouseIdAndResidentialRole(savedHouse.getId(), ResidentialRole.OWNER)).thenReturn(true);
+
+        com.residencial.identity.domain.exception.HouseAlreadyHasOwnerException ex = assertThrows(
+                com.residencial.identity.domain.exception.HouseAlreadyHasOwnerException.class,
+                () -> useCase.execute(request)
+        );
+
+        assertEquals("HOUSE_ALREADY_HAS_OWNER", ex.getErrorCode());
+        assertTrue(ex.getMessage().contains("already has an assigned owner"));
+        verify(userRepository, never()).save(any());
+        verify(invitationTokenRepository, never()).save(any());
+    }
 }

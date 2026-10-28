@@ -92,4 +92,120 @@ class IdentityDomainTest {
                 () -> new IdentificationDocument(IdentificationType.PASSPORT, "A@#$")
         );
     }
+
+    // =========================================================================
+    // Domain Entity Invariants: House
+    // =========================================================================
+
+    @Test
+    @DisplayName("House: Valid house entity creation")
+    void testHouseCreationSuccess() {
+        House house = new House("M-05 L-12", "Calle Los Almendros");
+        assertNotNull(house.getId());
+        assertEquals("M-05 L-12", house.getHouseNumber());
+        assertEquals("Calle Los Almendros", house.getStreetOrBlock());
+        assertNotNull(house.getCreatedAt());
+    }
+
+    @Test
+    @DisplayName("House: Throw exception when house number is empty or null")
+    void testHouseInvalidHouseNumber() {
+        assertThrows(IllegalArgumentException.class, () -> new House(null, "Calle Principal"));
+        assertThrows(IllegalArgumentException.class, () -> new House("   ", "Calle Principal"));
+    }
+
+    @Test
+    @DisplayName("House: Throw exception when street or block is empty or null")
+    void testHouseInvalidStreet() {
+        assertThrows(IllegalArgumentException.class, () -> new House("M-01", null));
+        assertThrows(IllegalArgumentException.class, () -> new House("M-01", "  "));
+    }
+
+    // =========================================================================
+    // Domain Entity Invariants: InvitationToken
+    // =========================================================================
+
+    @Test
+    @DisplayName("InvitationToken: Valid token creation, validity and consumption")
+    void testInvitationTokenLifecycle() {
+        java.util.UUID userId = java.util.UUID.randomUUID();
+        java.time.Instant future = java.time.Instant.now().plus(48, java.time.temporal.ChronoUnit.HOURS);
+        InvitationToken token = new InvitationToken(userId, "test-secure-token", future);
+
+        assertEquals(userId, token.getUserId());
+        assertEquals("test-secure-token", token.getToken());
+        assertEquals(future, token.getExpiresAt());
+        assertFalse(token.isUsed());
+        assertTrue(token.isValid());
+
+        token.markAsUsed();
+        assertTrue(token.isUsed());
+        assertFalse(token.isValid());
+    }
+
+    @Test
+    @DisplayName("InvitationToken: Throw exception on null userId or empty token")
+    void testInvitationTokenInvalidArgs() {
+        java.time.Instant future = java.time.Instant.now().plus(1, java.time.temporal.ChronoUnit.HOURS);
+        assertThrows(IllegalArgumentException.class, () -> new InvitationToken(null, "token", future));
+        assertThrows(IllegalArgumentException.class, () -> new InvitationToken(java.util.UUID.randomUUID(), null, future));
+        assertThrows(IllegalArgumentException.class, () -> new InvitationToken(java.util.UUID.randomUUID(), "  ", future));
+    }
+
+    @Test
+    @DisplayName("InvitationToken: Throw exception when expiresAt is null or in the past")
+    void testInvitationTokenPastExpiration() {
+        java.util.UUID userId = java.util.UUID.randomUUID();
+        assertThrows(IllegalArgumentException.class, () -> new InvitationToken(userId, "token", null));
+        java.time.Instant past = java.time.Instant.now().minus(1, java.time.temporal.ChronoUnit.HOURS);
+        assertThrows(IllegalArgumentException.class, () -> new InvitationToken(userId, "token", past));
+    }
+
+    // =========================================================================
+    // Domain Entity Invariants: User
+    // =========================================================================
+
+    @Test
+    @DisplayName("User: Creation initializes inactive state and activates with password hash")
+    void testUserLifecycleAndActivation() {
+        House house = new House("M-01 L-01", "Avenida Central");
+        IdentificationDocument doc = new IdentificationDocument(IdentificationType.DPI, VALID_DPI);
+        User user = new User(house, doc, "Carlos@Example.COM", "Carlos Gomez", ResidentialRole.OWNER);
+
+        assertEquals("carlos@example.com", user.getEmail());
+        assertEquals("Carlos Gomez", user.getFullName());
+        assertEquals(ResidentialRole.OWNER, user.getResidentialRole());
+        assertEquals(BoardRole.NONE, user.getBoardRole());
+        assertFalse(user.isActive());
+        assertNull(user.getPasswordHash());
+
+        user.activateAccount("$2a$10$e8w...dummybcrypt");
+        assertTrue(user.isActive());
+        assertEquals("$2a$10$e8w...dummybcrypt", user.getPasswordHash());
+    }
+
+    @Test
+    @DisplayName("User: Throw exception when activating account with empty password hash")
+    void testUserActivationEmptyPasswordFails() {
+        House house = new House("M-01 L-01", "Avenida Central");
+        IdentificationDocument doc = new IdentificationDocument(IdentificationType.DPI, VALID_DPI);
+        User user = new User(house, doc, "user@example.com", "Test User", ResidentialRole.TENANT);
+
+        assertThrows(IllegalArgumentException.class, () -> user.activateAccount(null));
+        assertThrows(IllegalArgumentException.class, () -> user.activateAccount("   "));
+    }
+
+    @Test
+    @DisplayName("User: Throw exception when required fields are missing")
+    void testUserRequiredFieldsValidation() {
+        House house = new House("M-01 L-01", "Avenida Central");
+        IdentificationDocument doc = new IdentificationDocument(IdentificationType.DPI, VALID_DPI);
+
+        assertThrows(IllegalArgumentException.class, () -> new User(house, doc, null, "Name", ResidentialRole.OWNER));
+        assertThrows(IllegalArgumentException.class, () -> new User(house, doc, "   ", "Name", ResidentialRole.OWNER));
+        assertThrows(IllegalArgumentException.class, () -> new User(house, doc, "email@test.com", null, ResidentialRole.OWNER));
+        assertThrows(IllegalArgumentException.class, () -> new User(house, doc, "email@test.com", "   ", ResidentialRole.OWNER));
+        assertThrows(IllegalArgumentException.class, () -> new User(house, null, "email@test.com", "Name", ResidentialRole.OWNER));
+        assertThrows(IllegalArgumentException.class, () -> new User(house, doc, "email@test.com", "Name", null));
+    }
 }
