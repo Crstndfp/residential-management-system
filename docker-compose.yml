@@ -122,6 +122,19 @@ services:
     networks:
       - residencial-network
 
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: residencial-web
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - api-gateway
+    networks:
+      - residencial-network
+
 networks:
   residencial-network:
     driver: bridge
