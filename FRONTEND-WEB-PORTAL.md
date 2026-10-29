@@ -2,10 +2,19 @@
 
 ## 1. Visión General & Racional Arquitectónico
 
-La **Fase 2** entrega el portal web administrativo y de garita vehicular para el **Sistema de Gestión Residencial**. Desarrollado como una aplicación de una sola página (**SPA**) reactiva y modular utilizando **React 18**, **TypeScript**, **Tailwind CSS** y empaquetada con **Vite**, provee una interfaz unificada con dos modos operativos:
+La **Fase 2** entrega el portal web administrativo y de garita vehicular para el **Sistema de Gestión Residencial**. Desarrollado como una aplicación de una sola página (**SPA**) reactiva y modular utilizando **React 18**, **TypeScript**, **Tailwind CSS** y empaquetada con **Vite**, provee una interfaz unificada protegida mediante **Autenticación Obligatoria y Control de Acceso Basado en Roles (RBAC)** para evitar el acceso no autorizado y la generación de datos no deseados:
 
-1. **Operador de Garita (Tablet Touch - US-601):** Interfaz táctil ergonómica con botones amplios, indicadores de aforo y cuadrícula interactiva de 20 espacios de parqueo para registrar ingresos y salidas vehiculares con un solo clic.
-2. **Junta Directiva & Administrador General:** Tablero integral de control para la gobernanza (asambleas, quórum legal), seguridad analítica (residentes encubiertos), reservas protegidas de amenidades, gestión de incidencias técnicas e inventario financiero.
+1. **Pantalla de Login & Puerta de Enlace (Gatekeeper):** Bloquea todo acceso no autenticado. Valida credenciales corporativas (usuario y contraseña) para guardias, administradores y miembros de junta.
+2. **Operador de Garita (Tablet Touch - US-601):** Al autenticarse como guardia, el sistema restringe estrictamente el acceso a la interfaz táctil de garita, ocultando por completo las pestañas de administración general, finanzas y gobernanza para prevenir manipulación indebida.
+3. **Junta Directiva & Administrador General:** Tablero integral de control para la gobernanza (asambleas, quórum legal), seguridad analítica (residentes encubiertos), reservas protegidas de amenidades, gestión de incidencias técnicas e inventario financiero.
+
+### Credenciales Preconfiguradas para Demostración
+
+| Perfil | Correo / Usuario | Contraseña | Rol Asignado | Alcance de la Vista |
+| :--- | :--- | :--- | :--- | :--- |
+| **Guardia de Garita** | `guardia@lasbrisas.gt` | `Garita2026!` | `GUARD` | **Exclusivo Tablet Garita (US-601).** Menús administrativos bloqueados. |
+| **Administrador General** | `admin@lasbrisas.gt` | `Admin2026!` | `ADMIN` | Acceso completo (Seguridad, Asambleas, Amenidades, Tickets, Finanzas). |
+| **Presidente de Junta** | `junta@lasbrisas.gt` | `Junta2026!` | `BOARD` | Acceso completo y control de asambleas. |
 
 ---
 
@@ -13,34 +22,23 @@ La **Fase 2** entrega el portal web administrativo y de garita vehicular para el
 
 ```mermaid
 flowchart TD
+    User["Usuario (Navegador Web / Tablet)"]
+    Login["Pantalla de Login & Autenticación (Email / Password)"]
+
     subgraph UI_Layer["Capa de Presentación Web (Vite + React 18)"]
-        Navbar["Navbar Dual Mode"]
+        Navbar["Navbar & Estado de Sesión (Logout)"]
         GaritaView["Modo Garita Tablet (US-601)\n- Cuadrícula 20 Espacios\n- Check-in Táctil\n- 1-Click Check-out"]
         AdminView["Modo Junta Directiva (Tabs)\n- Seguridad & Analítica\n- Asambleas & Quórum\n- Amenidades & Calendario\n- Mantenimiento Kanban\n- Finanzas & Conciliación"]
         APIClient["API Client con Fallback Reactivo\n(web/src/services/api.ts)"]
     end
 
-    subgraph ReverseProxy["Orquestación & Gateway"]
-        NginxGateway["Nginx Gateway (:8080 / :3000)\nReverse Proxy /api/v1/"]
-    end
-
-    subgraph Backend_Services["Microservicios Spring Boot"]
-        ParkingSvc["parking-service (:8084)"]
-        AmenitiesSvc["amenities-service (:8083)"]
-        FinanceSvc["finance-service (:8082)"]
-        IdentitySvc["identity-service (:8081)"]
-    end
-
-    Navbar -->|Switch Modo| GaritaView
-    Navbar -->|Switch Modo| AdminView
+    User --> Login
+    Login -->|Rol GUARD| GaritaView
+    Login -->|Rol ADMIN / BOARD| AdminView
+    Navbar -->|Switch Modo (Solo Admin)| GaritaView
+    Navbar -->|Cerrar Sesión| Login
     GaritaView --> APIClient
     AdminView --> APIClient
-    APIClient -->|REST Fetch| NginxGateway
-    NginxGateway -->|/api/v1/parking| ParkingSvc
-    NginxGateway -->|/api/v1/assemblies| AmenitiesSvc
-    NginxGateway -->|/api/v1/amenities| AmenitiesSvc
-    NginxGateway -->|/api/v1/tickets| AmenitiesSvc
-    NginxGateway -->|/api/v1/finance| FinanceSvc
 ```
 
 ---

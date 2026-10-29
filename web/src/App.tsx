@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Navbar, ViewMode, AdminTab } from './components/layout/Navbar';
+import { LoginView } from './components/auth/LoginView';
 import { ParkingSpotGrid } from './components/garita/ParkingSpotGrid';
 import { GateCheckInModal } from './components/garita/GateCheckInModal';
 import { CovertResidentsPanel } from './components/admin/CovertResidentsPanel';
@@ -9,6 +10,7 @@ import { MaintenanceTicketsPanel } from './components/admin/MaintenanceTicketsPa
 import { FinanceOverviewPanel } from './components/admin/FinanceOverviewPanel';
 import { api } from './services/api';
 import {
+  AuthUser,
   ParkingSpot,
   VehicleEntry,
   CovertResidentAlert,
@@ -23,7 +25,12 @@ import {
 } from './types';
 
 export const App: React.FC = () => {
-  const [viewMode, setViewMode] = useState<ViewMode>('GARITA');
+  // Authentication State
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => api.getCurrentUser());
+
+  const [viewMode, setViewMode] = useState<ViewMode>(() =>
+    currentUser?.role === 'GUARD' ? 'GARITA' : 'ADMIN'
+  );
   const [adminTab, setAdminTab] = useState<AdminTab>('PARKING');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -51,10 +58,12 @@ export const App: React.FC = () => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [assets, setAssets] = useState<FixedAsset[]>([]);
 
-  // Load initial data
+  // Load initial data only when authenticated
   useEffect(() => {
-    loadAllData();
-  }, []);
+    if (currentUser) {
+      loadAllData();
+    }
+  }, [currentUser]);
 
   const loadAllData = async () => {
     try {
@@ -104,6 +113,20 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleLoginSuccess = (user: AuthUser) => {
+    setCurrentUser(user);
+    if (user.role === 'GUARD') {
+      setViewMode('GARITA');
+    } else {
+      setViewMode('ADMIN');
+    }
+  };
+
+  const handleLogout = () => {
+    api.logout();
+    setCurrentUser(null);
+  };
+
   // Garita Actions
   const handleRegisterEntry = async (data: {
     plate: string;
@@ -114,7 +137,10 @@ export const App: React.FC = () => {
     spotNumber: string;
     guardUserId: string;
   }) => {
-    const newEntry = await api.registerEntry(data);
+    const newEntry = await api.registerEntry({
+      ...data,
+      guardUserId: currentUser?.id || data.guardUserId
+    });
     setActiveEntries(prev => [newEntry, ...prev]);
     setSpots(prev =>
       prev.map(s =>
@@ -148,7 +174,11 @@ export const App: React.FC = () => {
     appliedByUserId: string;
     appliedByName: string;
   }) => {
-    const fine = await api.applyParkingFine(payload);
+    const fine = await api.applyParkingFine({
+      ...payload,
+      appliedByUserId: currentUser?.id || payload.appliedByUserId,
+      appliedByName: currentUser?.name || payload.appliedByName
+    });
     setFines(prev => [fine, ...prev]);
   };
 
@@ -201,16 +231,24 @@ export const App: React.FC = () => {
     setTickets(prev => prev.map(cur => (cur.id === id ? t : cur)));
   };
 
+  // If unauthenticated: render Login View (Gatekeeper)
+  if (!currentUser) {
+    return <LoginView onLoginSuccess={handleLoginSuccess} onLogin={api.login} />;
+  }
+
   const availableSpots = spots.filter(s => !s.isOccupied);
+  const isGuard = currentUser.role === 'GUARD';
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans antialiased selection:bg-emerald-500 selection:text-slate-950">
       {/* Navigation */}
       <Navbar
-        viewMode={viewMode}
+        viewMode={isGuard ? 'GARITA' : viewMode}
         setViewMode={setViewMode}
         adminTab={adminTab}
         setAdminTab={setAdminTab}
+        currentUser={currentUser}
+        onLogout={handleLogout}
       />
 
       {/* Main Content Area */}
@@ -218,9 +256,9 @@ export const App: React.FC = () => {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-24 space-y-3">
             <div className="w-10 h-10 border-4 border-slate-700 border-t-emerald-500 rounded-full animate-spin" />
-            <p className="text-sm text-slate-400">Iniciando Sistema Residencial...</p>
+            <p className="text-sm text-slate-400">Cargando datos del sistema...</p>
           </div>
-        ) : viewMode === 'GARITA' ? (
+        ) : isGuard || viewMode === 'GARITA' ? (
           /* Garita Tablet View (US-601) */
           <div>
             <ParkingSpotGrid
@@ -282,10 +320,11 @@ export const App: React.FC = () => {
       <footer className="border-t border-slate-900 bg-slate-950/80 py-4 text-center text-xs text-slate-400">
         <p>
           Condominio Residencial Las Brisas &copy; {new Date().getFullYear()} &middot; Plataforma
-          de Gestión Integrada (Épicas 1 a 6)
+          de Gestión Integrada &middot; Sesión activa: {currentUser.name} ({currentUser.role})
         </p>
       </footer>
     </div>
   );
 };
+
 export default App;
