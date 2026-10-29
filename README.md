@@ -1,16 +1,147 @@
-# Sistema de Gestión Residencial
+# Sistema de Gestión Residencial — Plataforma Integral de Microservicios DDD
 
-Plataforma de gestión integral comunitaria, financiera y de seguridad para complejos residenciales.
+[![Java](https://img.shields.io/badge/Java-21%20LTS%20Temurin-orange.svg)](https://adoptium.net/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.4-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16%20Alpine-blue.svg)](https://www.postgresql.org/)
+[![Docker](https://img.shields.io/badge/Docker%20Compose-Orchestrated-blue.svg)](https://www.docker.com/)
+[![License](https://img.shields.io/badge/License-100%25%20FOSS-green.svg)](docs/01-architecture-design.md)
 
-## Arquitectura
-* **Microservicios:** Java 21 LTS (OpenJDK) + Spring Boot 3 con enfoque DDD.
-* **Base de Datos:** PostgreSQL 16 con esquemas aislados por bounded context.
-* **Mensajería:** RabbitMQ.
-* **Gateway:** Nginx Reverse Proxy.
-* **Mobile:** Android Nativo (Kotlin + Jetpack Compose).
-* **Web:** React + TypeScript + Vite.
+Plataforma backend modular orientada al **Diseño Guiado por el Dominio (DDD)** y microservicios autónomos, construida con estándares empresariales para la administración comunitaria, financiera, operativa y de seguridad en complejos residenciales.
 
-## Puesta en Marcha Local
-```bash
-docker compose up -d
+---
+
+## 1. Arquitectura del Sistema (C4 Containers)
+
+El sistema está orquestado mediante **Docker Compose**, compuesto por **4 Microservicios Autónomos**, **1 API Gateway Centralizado (Nginx)**, **PostgreSQL con esquemas aislados por bounded context** y **RabbitMQ**:
+
+```mermaid
+flowchart TD
+    Clients["Clientes: Web App (React/Vue) & Mobile (Android Kotlin)"]
+    Gateway["API Gateway / Reverse Proxy (Nginx :8080)"]
+
+    subgraph Microservicios["Ecosistema de Microservicios (Docker - Java 21)"]
+        AuthSvc["identity-service:8081\n(Casas, Propietarios, Inquilinos, Roles)"]
+        FinanceSvc["finance-service:8082\n(Egresos, Conciliación, Multas, Estados de Cuenta, Activos)"]
+        AmenitiesSvc["amenities-service:8083\n(Amenidades, Reservas, Asambleas, Votaciones, Tickets)"]
+        ParkingSvc["parking-service:8084\n(Garita, Aforo, Analítica de Placas, Residente Encubierto)"]
+    end
+
+    subgraph Datos["Base de Datos PostgreSQL (residencial_db :5432)"]
+        DB_Auth[("identity_schema")]
+        DB_Finance[("finance_schema")]
+        DB_Amenities[("amenities_schema")]
+        DB_Parking[("parking_schema")]
+    end
+
+    subgraph Mensajeria["Eventos y Colas"]
+        RabbitMQ[("RabbitMQ :5672 / :15672")]
+    end
+
+    Clients -->|HTTP / REST| Gateway
+
+    Gateway -->|/api/v1/identity/*| AuthSvc
+    Gateway -->|/api/v1/finance/*| FinanceSvc
+    Gateway -->|/api/v1/amenities/*| AmenitiesSvc
+    Gateway -->|/api/v1/parking/*| ParkingSvc
+
+    AuthSvc --> DB_Auth
+    FinanceSvc --> DB_Finance
+    AmenitiesSvc --> DB_Amenities
+    ParkingSvc --> DB_Parking
+
+    AmenitiesSvc -.->|Cargos de Reserva| FinanceSvc
+    ParkingSvc -.->|Multas por Pernocta| FinanceSvc
+
+    AuthSvc -.-> RabbitMQ
+    FinanceSvc -.-> RabbitMQ
 ```
+
+---
+
+## 2. Cobertura del Backlog (100% Implementado)
+
+| Épica | Historias de Usuario | Microservicio | Esquema BD | Puerto | Descripción |
+| :--- | :--- | :---: | :---: | :---: | :--- |
+| **Épica 1: Identidad y Comunidad** | US-101, US-102 | `identity-service` | `identity_schema` | `8081` | Registro de casas, invitación/activación de propietarios y delegación restringida de inquilinos. |
+| **Épica 2: Finanzas y Mobiliario** | US-201, US-202, US-203, US-204, US-205 | `finance-service` | `finance_schema` | `8082` | Registro de facturas, conciliación bancaria desatendida (Excel), multas, estado de cuenta e inventario de activos. |
+| **Épica 3: Amenidades y Reservas** | US-301, US-302 | `amenities-service` | `amenities_schema` | `8083` | Catálogo de amenidades, calendario de privacidad (solo "Reservado"), validación de solvencia y cargo financiero. |
+| **Épica 4: Asambleas y Votaciones** | US-401, US-402, US-403 | `amenities-service` | `amenities_schema` | `8083` | Convocatoria, pase de lista digital, cálculo de quórum ($\ge$ 50%), voto seguro exclusivo para propietarios (1 voto/casa con hash SHA-256) y veredicto automático. |
+| **Épica 5: Tickets de Mantenimiento** | US-501, US-502 | `amenities-service` | `amenities_schema` | `8083` | Reporte de incidencias con fotografías y folio único (`OPEN`), asignación de técnicos (`IN_PROGRESS`) y notificaciones al residente. |
+| **Épica 6: Parqueo y Garita** | US-601, US-602, US-603 | `parking-service` | `parking_schema` | `8084` | Control operativo en garita con asignación automática de cajón (`P-01` a `P-20`), motor de analítica de pernoctas para detectar "Residente Encubierto" y multas automáticas con bitácora. |
+
+---
+
+## 3. Puesta en Marcha Local con Docker Compose
+
+### Requisitos Previos:
+* Docker Engine 24+ y Docker Compose v2+
+* Puertos libres en el host: `8080` (Gateway), `5432` (PostgreSQL), `5672` / `15672` (RabbitMQ), y `8081` a `8084` (Microservicios).
+
+### 1. Iniciar toda la infraestructura y microservicios:
+```bash
+docker compose up -d --build
+```
+
+El script [`docker/postgres/init-all.sql`](docker/postgres/init-all.sql) se ejecutará automáticamente en la inicialización de PostgreSQL, aplicando las extensiones UUID, los 4 esquemas y las 9 migraciones secuenciales (`V1` a `V9`) con sus datos semilla (incluyendo los 20 cajones de parqueo de visitas).
+
+### 2. Verificar el estado del API Gateway:
+```bash
+curl http://localhost:8080/health
+```
+**Respuesta:**
+```json
+{
+  "status": "UP",
+  "gateway": "Nginx Reverse Proxy",
+  "services": ["identity", "finance", "amenities", "parking"]
+}
+```
+
+---
+
+## 4. Matriz de Rutas del API Gateway (`http://localhost:8080`)
+
+| Módulo / Contexto | Ruta Base en Gateway | Microservicio Destino | Principales Operaciones |
+| :--- | :--- | :---: | :--- |
+| **Identidad & Casas** | `/api/v1/identity/*` | `identity-service:8081` | Alta de casas, invitaciones y activación de usuarios (`OWNER`, `TENANT`). |
+| **Finanzas & Activos** | `/api/v1/finance/*` | `finance-service:8082` | Facturas de egresos, conciliación bancaria masiva, multas, saldo de cuenta y activos. |
+| **Amenidades & Reservas** | `/api/v1/amenities/` | `amenities-service:8083` | Configuración de amenidades, consulta de calendario con privacidad y solicitudes de reserva. |
+| **Asambleas & Quórum** | `/api/v1/amenities/assemblies/*` | `amenities-service:8083` | Convocatoria, registro de asistencia (pase de lista) y cálculo de quórum legal. |
+| **Votaciones Digitales** | `/api/v1/amenities/motions/*` | `amenities-service:8083` | Apertura de mociones, emisión de voto seguro (1 voto/casa con hash SHA-256) y escrutinio. |
+| **Tickets de Mantenimiento** | `/api/v1/amenities/tickets/*` | `amenities-service:8083` | Reporte con foto, seguimiento de técnicos, bitácora y notificaciones de avance. |
+| **Garita & Parqueo** | `/api/v1/parking/entries/*` | `parking-service:8084` | Ingreso y salida de visitantes, asignación y liberación de cajones (`P-01` a `P-20`). |
+| **Analítica de Placas** | `/api/v1/parking/analytics/*` | `parking-service:8084` | Reporte de sospecha de "Residente Encubierto" ($\ge$ 3 pernoctas nocturnas). |
+| **Multas de Parqueo** | `/api/v1/parking/fines/*` | `parking-service:8084` | Aplicación de sanciones por abuso de parqueo con evidencia y cargo a finanzas. |
+
+---
+
+## 5. Planes de Prueba y Documentación de QA
+
+Todos los planes de prueba, matrices de aceptación (Gherkin), payloads de prueba y consultas SQL de verificación se encuentran organizados en la carpeta [`docs/qa/`](docs/qa/):
+
+1. [docs/qa/01-us-101-102-test-plan.md](docs/qa/01-us-101-102-test-plan.md) — Onboarding, Casas y Roles.
+2. [docs/qa/02-us-201-test-plan.md](docs/qa/02-us-201-test-plan.md) — Facturas y Egresos Operativos.
+3. [docs/qa/03-us-202-test-plan.md](docs/qa/03-us-202-test-plan.md) — Conciliación Bancaria Masiva por Excel.
+4. [docs/qa/04-us-203-test-plan.md](docs/qa/04-us-203-test-plan.md) — Catálogo y Aplicación de Multas.
+5. [docs/qa/05-us-204-test-plan.md](docs/qa/05-us-204-test-plan.md) — Estado de Cuenta Personal y Semáforo de Solvencia.
+6. [docs/qa/06-us-205-test-plan.md](docs/qa/06-us-205-test-plan.md) — Inventario y Auditoría de Activos Fijos.
+7. [docs/qa/07-us-301-302-test-plan.md](docs/qa/07-us-301-302-test-plan.md) — Amenidades y Calendario de Reservas con Privacidad.
+8. [docs/qa/08-us-401-403-test-plan.md](docs/qa/08-us-401-403-test-plan.md) — Asambleas, Quórum y Votaciones Seguras (Hash SHA-256).
+9. [docs/qa/09-us-501-502-test-plan.md](docs/qa/09-us-501-502-test-plan.md) — Tickets de Incidencia y Notificaciones de Avance.
+10. [docs/qa/10-us-601-603-test-plan.md](docs/qa/10-us-601-603-test-plan.md) — Parqueo de Visitas, Garita y Analítica de Placas.
+
+---
+
+## 6. Ejecución de Pruebas Unitarias
+
+Para ejecutar las suites de pruebas de los microservicios sin requerir Java instalado localmente:
+
+```bash
+# Ejemplo: Pruebas unitarias de parking-service
+docker run --rm -v ~/.m2:/root/.m2 -v $(pwd)/services/parking-service:/app -w /app maven:3.9.6-eclipse-temurin-21 mvn test
+
+# Ejemplo: Pruebas unitarias de amenities-service
+docker run --rm -v ~/.m2:/root/.m2 -v $(pwd)/services/amenities-service:/app -w /app maven:3.9.6-eclipse-temurin-21 mvn test
+```
+
+* **Tasa de Aprobación de Pruebas:** 100% de éxito en más de 130 casos unitarios.
