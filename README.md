@@ -150,9 +150,17 @@ docker run --rm -v ~/.m2:/root/.m2 -v $(pwd)/services/amenities-service:/app -w 
 
 ## 7. Portal Web Administrativo y de Garita (React + TypeScript + Tailwind CSS)
 
-Ubicado en el directorio [`web/`](web/), esta aplicación web moderna (SPA) desarrollada con **React 18**, **TypeScript**, **Tailwind CSS** y empaquetada con **Vite**, provee una interfaz unificada con dos modos operativos:
+Ubicado en el directorio [`web/`](web/), esta aplicación web moderna (SPA) desarrollada con **React 18**, **TypeScript**, **Tailwind CSS** y empaquetada con **Vite**, provee una interfaz unificada protegida con **Autenticación Obligatoria y Control de Acceso Basado en Roles (RBAC)**:
 
-### Modos Operativos
+### Credenciales de Demostración del Sistema
+
+| Perfil | Usuario / Correo | Contraseña | Rol | Acceso y Restricciones |
+| :--- | :--- | :--- | :--- | :--- |
+| **Guardia de Garita** | `guardia@lasbrisas.gt` | `Garita2026!` | `GUARD` | **Exclusivo Tablet Garita (US-601).** Oculta y bloquea menús de Junta Directiva para prevenir manipulación o data no autorizada. |
+| **Administrador** | `admin@lasbrisas.gt` | `Admin2026!` | `ADMIN` | Acceso completo (Seguridad, Asambleas, Amenidades, Tickets, Finanzas). |
+| **Presidente Junta** | `junta@lasbrisas.gt` | `Junta2026!` | `BOARD` | Acceso completo a gobernanza y asambleas. |
+
+### Modos Operativos Protegidos por Rol
 
 1. **Modo Garita (Tablet Touch - US-601):**
    - **Cuadrícula Visual Interactiva de 20 Espacios (`P-01` a `P-20`):** Indicadores en tiempo real de disponibilidad (Verde: Disponible, Rojo: Ocupado).

@@ -1,4 +1,23 @@
 // ==========================================
+// Authentication & RBAC Types
+// ==========================================
+export type UserRole = 'ADMIN' | 'BOARD' | 'GUARD' | 'RESIDENT';
+
+export interface AuthUser {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  guardShift?: string;
+  token: string;
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+// ==========================================
 // Parking & Security Types (Épica 6)
 // ==========================================
 export interface ParkingSpot {

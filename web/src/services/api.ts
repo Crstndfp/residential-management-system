@@ -1,4 +1,6 @@
 import {
+  AuthUser,
+  LoginCredentials,
   ParkingSpot,
   VehicleEntry,
   CovertResidentAlert,
@@ -360,7 +362,83 @@ async function fetchWithFallback<T>(url: string, options?: RequestInit, fallback
   throw new Error(`Unable to fetch ${url} and no fallback available.`);
 }
 
+// Valid Authentication Directory
+const VALID_ACCOUNTS: Array<{
+  email: string;
+  pass: string;
+  user: AuthUser;
+}> = [
+  {
+    email: 'guardia@lasbrisas.gt',
+    pass: 'Garita2026!',
+    user: {
+      id: 'usr-guard-01',
+      name: 'Oficial Juan Morales',
+      email: 'guardia@lasbrisas.gt',
+      role: 'GUARD',
+      guardShift: 'Garita Principal · Turno Matutino',
+      token: 'jwt-guard-token-mock-9988'
+    }
+  },
+  {
+    email: 'admin@lasbrisas.gt',
+    pass: 'Admin2026!',
+    user: {
+      id: 'usr-admin-01',
+      name: 'Lic. Fernando Gómez',
+      email: 'admin@lasbrisas.gt',
+      role: 'ADMIN',
+      token: 'jwt-admin-token-mock-1122'
+    }
+  },
+  {
+    email: 'junta@lasbrisas.gt',
+    pass: 'Junta2026!',
+    user: {
+      id: 'usr-board-01',
+      name: 'Ing. Roberto Arrivillaga',
+      email: 'junta@lasbrisas.gt',
+      role: 'BOARD',
+      token: 'jwt-board-token-mock-3344'
+    }
+  }
+];
+
 export const api = {
+  // ==========================================
+  // Authentication & RBAC
+  // ==========================================
+  async login(credentials: LoginCredentials): Promise<AuthUser> {
+    const trimmedEmail = credentials.email.trim().toLowerCase();
+    const account = VALID_ACCOUNTS.find(
+      acc => acc.email.toLowerCase() === trimmedEmail && acc.pass === credentials.password
+    );
+
+    // Simulate network delay for realistic UX
+    await new Promise(r => setTimeout(r, 450));
+
+    if (!account) {
+      throw new Error('Credenciales inválidas. Por favor verifique su usuario y contraseña.');
+    }
+
+    // Persist session
+    localStorage.setItem('auth_user_session', JSON.stringify(account.user));
+    return account.user;
+  },
+
+  getCurrentUser(): AuthUser | null {
+    try {
+      const data = localStorage.getItem('auth_user_session');
+      return data ? JSON.parse(data) : null;
+    } catch {
+      return null;
+    }
+  },
+
+  logout(): void {
+    localStorage.removeItem('auth_user_session');
+  },
+
   // ==========================================
   // Parking & Security
   // ==========================================
