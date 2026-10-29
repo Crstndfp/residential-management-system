@@ -145,3 +145,39 @@ docker run --rm -v ~/.m2:/root/.m2 -v $(pwd)/services/amenities-service:/app -w 
 ```
 
 * **Tasa de Aprobación de Pruebas:** 100% de éxito en más de 130 casos unitarios.
+
+---
+
+## 7. Portal Web Administrativo y de Garita (React + TypeScript + Tailwind CSS)
+
+Ubicado en el directorio [`web/`](web/), esta aplicación web moderna (SPA) desarrollada con **React 18**, **TypeScript**, **Tailwind CSS** y empaquetada con **Vite**, provee una interfaz unificada con dos modos operativos:
+
+### Modos Operativos
+
+1. **Modo Garita (Tablet Touch - US-601):**
+   - **Cuadrícula Visual Interactiva de 20 Espacios (`P-01` a `P-20`):** Indicadores en tiempo real de disponibilidad (Verde: Disponible, Rojo: Ocupado).
+   - **Check-in Rápido de Vehículos de Visita:** Modal táctil para registrar placa, casa de destino, nombre del visitante y DPI.
+   - **Check-out Inmediato:** Botón de 1-clic ("Marcar Salida") directo en la celda del espacio o en la tabla detallada.
+   - **Medidores de Aforo:** Conteo en vivo de capacidad, vehículos estacionados y porcentaje de ocupación.
+
+2. **Modo Junta Directiva y Administración:**
+   - **Seguridad & Parqueos (US-602, US-603):** Tabla analítica de vehículos detectados como *Residentes Encubiertos* ($\ge 3$ pernoctaciones nocturnas), visor forense de historial de ingresos y botón directo para aplicar multas vinculadas a Finanzas (Q. 250.00).
+   - **Asambleas & Quórum Legal (US-401, US-402, US-403):** Termómetro interactivo de quórum con umbral legal del 50%, pase de lista digital de copropietarios, apertura y cierre de mociones, y escrutinio automático sellado con hash SHA-256 inmutable.
+   - **Amenidades & Calendario Protegido (US-301, US-302):** Catálogo de áreas comunes (Salón Social, Churrasqueras, Cancha Sintética) y calendario con filtro estricto de privacidad (sólo muestra estados "Disponible" o "Reservado" sin exponer datos personales).
+   - **Mantenimiento & Tickets (US-501, US-502):** Tablero de incidencias por estado (`OPEN`, `IN_PROGRESS`, `RESOLVED`, `CLOSED`), selector de prioridades, registro de fallas y asignación de técnicos con bitácora de auditoría.
+   - **Finanzas & Activos Fijos (US-201, US-202, US-203, US-205):** Consulta de facturas con enlace a soporte digital, simulador de conciliación bancaria automática vía Excel (.xlsx/.csv), e inventario patrimonial valorizado.
+
+### Ejecución Local del Portal Web
+
+```bash
+# Desarrollo con Hot Reload (puerto 3000)
+cd web
+npm install
+npm run dev
+
+# Compilación y verificación estática
+npm run build
+
+# O vía Docker Compose
+docker compose up web -d
+```
