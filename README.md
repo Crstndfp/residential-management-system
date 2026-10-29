@@ -181,3 +181,30 @@ npm run build
 # O vía Docker Compose
 docker compose up web -d
 ```
+
+---
+
+## 8. Aplicación Móvil para Residentes (Android Kotlin + Jetpack Compose)
+
+Ubicada en el directorio [`mobile/`](mobile/), la aplicación móvil para residentes de **Residencial Las Brisas** provee las herramientas esenciales del día a día para los copropietarios:
+
+### Módulos Móviles
+
+1. **Pantalla de Inicio & Semáforo de Solvencia:**
+   - Estado de cuenta y solvencia en tiempo real (`SOLVENTE` vs `EN MORA`).
+   - Botón de Pánico (SOS) prominente con diálogo de confirmación para emergencias médicas y de seguridad.
+2. **Pases de Visita QR (US-601):**
+   - Generación de pases temporales de 24 horas con token criptográfico SHA-256.
+   - Visor de código QR en pantalla para lectura directa en la Garita vehicular.
+3. **Amenidades & Reservas (US-301, US-302):**
+   - Catálogo de áreas comunes (Salón Social, Pérgola Churrasqueras, Cancha Polideportiva).
+   - Consulta de disponibilidad protegida por privacidad y confirmación de reserva.
+4. **Reporte de Fallas y Mantenimiento (US-501, US-502):**
+   - Registro de incidencias técnicas con categorías y niveles de prioridad.
+   - Monitoreo del avance de la reparación (`OPEN` &rarr; `IN_PROGRESS` &rarr; `RESOLVED`).
+5. **Asambleas y Votación Electrónica Remota (US-401, US-402, US-403):**
+   - Medidor de quórum legal en vivo (umbral 50%).
+   - Votación ponderada remota en mociones abiertas con sellado criptográfico auditado SHA-256.
+
+Para más detalles consulte [`MOBILE-APP.md`](MOBILE-APP.md).
+
