@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { X, Car, Home, User, CreditCard, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { X, Car, Home, User, CreditCard, CheckCircle2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { ParkingSpot } from '../../types';
 
 interface GateCheckInModalProps {
@@ -29,28 +30,26 @@ export const GateCheckInModal: React.FC<GateCheckInModalProps> = ({
   const [visitorIdDocument, setVisitorIdDocument] = useState('');
   const [spotNumber, setSpotNumber] = useState(availableSpots[0]?.spotNumber || 'P-01');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!plate.trim()) {
-      setError('Ingrese la placa del vehículo.');
+      toast.error('Ingrese la placa del vehículo.');
       return;
     }
     if (!visitorName.trim()) {
-      setError('Ingrese el nombre del visitante.');
+      toast.error('Ingrese el nombre del visitante.');
       return;
     }
     if (!spotNumber) {
-      setError('Seleccione un espacio de parqueo disponible.');
+      toast.error('Seleccione un espacio de parqueo disponible.');
       return;
     }
 
     try {
       setIsSubmitting(true);
-      setError(null);
       await onSubmit({
         plate: plate.toUpperCase().trim(),
         houseNumber: houseNumber.trim(),
@@ -60,35 +59,35 @@ export const GateCheckInModal: React.FC<GateCheckInModalProps> = ({
         spotNumber,
         guardUserId: 'guard-on-duty'
       });
-      // reset form & close
+      toast.success(`Vehículo ${plate.toUpperCase().trim()} registrado en ${spotNumber}`);
       setPlate('');
       setVisitorName('');
       setVisitorIdDocument('');
       onClose();
     } catch (err: any) {
-      setError(err?.message || 'Error al registrar ingreso');
+      toast.error(err?.message || 'Error al registrar ingreso');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden transition-colors">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 bg-slate-800/60 border-b border-slate-800">
+        <div className="flex items-center justify-between px-6 py-4 bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-emerald-500/20 text-emerald-400 rounded-lg">
+            <div className="p-2 bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-lg">
               <Car className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-white">Registro de Ingreso de Visita</h3>
-              <p className="text-xs text-slate-400">Garita de Control de Acceso Vehicular (US-601)</p>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Registro de Ingreso de Visita</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Garita de Control de Acceso Vehicular (US-601)</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition"
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -96,16 +95,9 @@ export const GateCheckInModal: React.FC<GateCheckInModalProps> = ({
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {error && (
-            <div className="p-3 bg-red-950/50 border border-red-800 rounded-lg text-sm text-red-300 flex items-center space-x-2">
-              <ShieldAlert className="w-4 h-4 flex-shrink-0 text-red-400" />
-              <span>{error}</span>
-            </div>
-          )}
-
           {/* License Plate Input */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
               Placa de Circulación *
             </label>
             <div className="relative">
@@ -118,7 +110,7 @@ export const GateCheckInModal: React.FC<GateCheckInModalProps> = ({
                 onChange={e => setPlate(e.target.value.toUpperCase())}
                 placeholder="P-123XYZ"
                 autoFocus
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-800/90 border border-slate-700 rounded-lg text-white font-mono text-base tracking-widest placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent uppercase"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800/90 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white font-mono text-base tracking-widest placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 uppercase transition"
               />
             </div>
           </div>
@@ -126,7 +118,7 @@ export const GateCheckInModal: React.FC<GateCheckInModalProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* House Destination */}
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
                 Casa de Destino *
               </label>
               <div className="relative">
@@ -138,20 +130,20 @@ export const GateCheckInModal: React.FC<GateCheckInModalProps> = ({
                   value={houseNumber}
                   onChange={e => setHouseNumber(e.target.value)}
                   placeholder="Casa 101"
-                  className="w-full pl-10 pr-3 py-2.5 bg-slate-800/90 border border-slate-700 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full pl-10 pr-3 py-2.5 bg-slate-50 dark:bg-slate-800/90 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
                 />
               </div>
             </div>
 
             {/* Parking Spot Selection */}
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
                 Espacio Asignado *
               </label>
               <select
                 value={spotNumber}
                 onChange={e => setSpotNumber(e.target.value)}
-                className="w-full px-3 py-2.5 bg-slate-800/90 border border-slate-700 rounded-lg text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800/90 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
               >
                 {availableSpots.length === 0 ? (
                   <option value="">No hay parqueos libres</option>
@@ -168,7 +160,7 @@ export const GateCheckInModal: React.FC<GateCheckInModalProps> = ({
 
           {/* Visitor Name */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
               Nombre Completo del Conductor / Visitante *
             </label>
             <div className="relative">
@@ -180,14 +172,14 @@ export const GateCheckInModal: React.FC<GateCheckInModalProps> = ({
                 value={visitorName}
                 onChange={e => setVisitorName(e.target.value)}
                 placeholder="Ej. Juan Pérez López"
-                className="w-full pl-10 pr-3 py-2.5 bg-slate-800/90 border border-slate-700 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full pl-10 pr-3 py-2.5 bg-slate-50 dark:bg-slate-800/90 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
               />
             </div>
           </div>
 
           {/* DPI / Document */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
               Documento de Identificación (DPI / Licencia)
             </label>
             <div className="relative">
@@ -199,18 +191,18 @@ export const GateCheckInModal: React.FC<GateCheckInModalProps> = ({
                 value={visitorIdDocument}
                 onChange={e => setVisitorIdDocument(e.target.value)}
                 placeholder="DPI-2489123450101"
-                className="w-full pl-10 pr-3 py-2.5 bg-slate-800/90 border border-slate-700 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full pl-10 pr-3 py-2.5 bg-slate-50 dark:bg-slate-800/90 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
               />
             </div>
           </div>
 
           {/* Actions */}
-          <div className="pt-4 flex items-center justify-end space-x-3 border-t border-slate-800">
+          <div className="pt-4 flex items-center justify-end space-x-3 border-t border-slate-200 dark:border-slate-800">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2.5 text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition"
+              className="px-4 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition"
             >
               Cancelar
             </button>

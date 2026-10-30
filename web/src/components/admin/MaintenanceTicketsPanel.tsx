@@ -8,6 +8,7 @@ import {
   Filter,
   X
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { MaintenanceTicket } from '../../types';
 
 interface MaintenanceTicketsPanelProps {
@@ -72,11 +73,14 @@ export const MaintenanceTicketsPanel: React.FC<MaintenanceTicketsPanelProps> = (
         reporterName,
         houseNumber
       });
+      toast.success('Incidencia registrada correctamente');
       setShowCreateModal(false);
       setTitle('');
       setDescription('');
       setLocation('');
       setPhotoUrl('');
+    } catch {
+      toast.error('Error al registrar incidencia');
     } finally {
       setIsCreating(false);
     }
@@ -106,7 +110,10 @@ export const MaintenanceTicketsPanel: React.FC<MaintenanceTicketsPanelProps> = (
         progressNotes || `Transición a estado ${newStatus}`,
         assignedTech
       );
+      toast.success(`Ticket ${selectedTicketForProgress.folio} actualizado a ${newStatus}`);
       setSelectedTicketForProgress(null);
+    } catch {
+      toast.error('Error al actualizar ticket');
     } finally {
       setIsUpdating(false);
     }
@@ -119,38 +126,38 @@ export const MaintenanceTicketsPanel: React.FC<MaintenanceTicketsPanelProps> = (
 
   const getPriorityBadge = (p: MaintenanceTicket['priority']) => {
     const map = {
-      URGENT: 'bg-red-500/20 text-red-300 border-red-500/40',
-      HIGH: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
-      MEDIUM: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
-      LOW: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+      URGENT: 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-300 border-red-300 dark:border-red-500/40',
+      HIGH: 'bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-300 border-rose-300 dark:border-rose-500/40',
+      MEDIUM: 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300 border-amber-300 dark:border-amber-500/40',
+      LOW: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/40'
     };
-    return map[p] || 'bg-slate-700 text-slate-300';
+    return map[p] || 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300';
   };
 
   const getStatusBadge = (s: MaintenanceTicket['status']) => {
     const map = {
-      OPEN: 'bg-blue-500/10 text-blue-400 border-blue-500/30',
-      IN_PROGRESS: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
-      RESOLVED: 'bg-teal-500/10 text-teal-400 border-teal-500/30',
-      CLOSED: 'bg-slate-700/50 text-slate-400 border-slate-600'
+      OPEN: 'bg-blue-100 text-blue-800 dark:bg-blue-500/10 dark:text-blue-400 border-blue-200 dark:border-blue-500/30',
+      IN_PROGRESS: 'bg-amber-100 text-amber-800 dark:bg-amber-500/10 dark:text-amber-400 border-amber-200 dark:border-amber-500/30',
+      RESOLVED: 'bg-teal-100 text-teal-800 dark:bg-teal-500/10 dark:text-teal-400 border-teal-200 dark:border-teal-500/30',
+      CLOSED: 'bg-slate-200 text-slate-700 dark:bg-slate-700/50 dark:text-slate-400 border-slate-300 dark:border-slate-600'
     };
-    return map[s] || 'bg-slate-700 text-slate-300';
+    return map[s] || 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300';
   };
 
   return (
     <div className="space-y-6">
       {/* Banner */}
-      <div className="bg-gradient-to-r from-amber-950/60 via-slate-900 to-slate-900 border border-amber-900/40 p-6 rounded-2xl shadow-xl">
+      <div className="bg-gradient-to-r from-amber-50 via-white to-white dark:from-amber-950/60 dark:via-slate-900 dark:to-slate-900 border border-amber-200 dark:border-amber-900/40 p-6 rounded-2xl shadow-sm dark:shadow-xl transition-colors">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center space-x-2 text-amber-400 font-bold text-xs uppercase tracking-wider mb-1">
+            <div className="flex items-center space-x-2 text-amber-600 dark:text-amber-400 font-bold text-xs uppercase tracking-wider mb-1">
               <Wrench className="w-4 h-4" />
               <span>Mantenimiento y Fallas &middot; Épica 5 (US-501 &amp; US-502)</span>
             </div>
-            <h2 className="text-2xl font-black text-white tracking-tight">
+            <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
               Gestión de Incidencias y Asignación a Técnicos
             </h2>
-            <p className="text-slate-400 text-sm mt-1 max-w-2xl">
+            <p className="text-slate-600 dark:text-slate-400 text-sm mt-1 max-w-2xl">
               Recepción, clasificación y seguimiento del ciclo de vida de tickets de
               mantenimiento (Abierto &rarr; En Proceso &rarr; Resuelto &rarr; Cerrado) con
               registro auditable de actualizaciones.
@@ -168,7 +175,7 @@ export const MaintenanceTicketsPanel: React.FC<MaintenanceTicketsPanelProps> = (
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex items-center space-x-2 border-b border-slate-800 pb-3">
+      <div className="flex items-center space-x-2 border-b border-slate-200 dark:border-slate-800 pb-3">
         <Filter className="w-4 h-4 text-slate-400 mr-1" />
         {['ALL', 'OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'].map(s => (
           <button
@@ -176,8 +183,8 @@ export const MaintenanceTicketsPanel: React.FC<MaintenanceTicketsPanelProps> = (
             onClick={() => setFilterStatus(s)}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
               filterStatus === s
-                ? 'bg-slate-800 text-amber-400 border border-slate-700'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-400 border border-slate-300 dark:border-slate-700 shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
             }`}
           >
             {s === 'ALL'
@@ -198,11 +205,11 @@ export const MaintenanceTicketsPanel: React.FC<MaintenanceTicketsPanelProps> = (
         {filteredTickets.map(ticket => (
           <div
             key={ticket.id}
-            className="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between space-y-4 shadow-lg hover:border-slate-700 transition"
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 flex flex-col justify-between space-y-4 shadow-sm dark:shadow-lg hover:border-slate-300 dark:hover:border-slate-700 transition"
           >
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="font-mono text-xs font-bold text-slate-400 bg-slate-800 px-2 py-0.5 rounded border border-slate-700">
+                <span className="font-mono text-xs font-bold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">
                   {ticket.folio}
                 </span>
                 <div className="flex items-center space-x-2">
@@ -223,22 +230,22 @@ export const MaintenanceTicketsPanel: React.FC<MaintenanceTicketsPanelProps> = (
                 </div>
               </div>
 
-              <h4 className="font-bold text-white text-base leading-snug">{ticket.title}</h4>
-              <p className="text-xs text-slate-400 mt-1 line-clamp-3">{ticket.description}</p>
+              <h4 className="font-bold text-slate-900 dark:text-white text-base leading-snug">{ticket.title}</h4>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 line-clamp-3">{ticket.description}</p>
 
-              <div className="mt-4 pt-3 border-t border-slate-800 space-y-2 text-xs text-slate-300">
-                <div className="flex items-center space-x-1.5 text-slate-400">
-                  <MapPin className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+              <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2 text-xs text-slate-600 dark:text-slate-300">
+                <div className="flex items-center space-x-1.5 text-slate-500 dark:text-slate-400">
+                  <MapPin className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 flex-shrink-0" />
                   <span className="truncate">{ticket.location}</span>
                 </div>
-                <div className="flex items-center space-x-1.5 text-slate-400">
-                  <User className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
+                <div className="flex items-center space-x-1.5 text-slate-500 dark:text-slate-400">
+                  <User className="w-3.5 h-3.5 flex-shrink-0" />
                   <span>
                     Reporta: {ticket.reporterName} ({ticket.houseNumber})
                   </span>
                 </div>
                 {ticket.assignedTechnician && (
-                  <div className="flex items-center space-x-1.5 text-teal-400 font-medium">
+                  <div className="flex items-center space-x-1.5 text-teal-600 dark:text-teal-400 font-medium">
                     <Wrench className="w-3.5 h-3.5 flex-shrink-0" />
                     <span>Técnico: {ticket.assignedTechnician}</span>
                   </div>
@@ -249,7 +256,7 @@ export const MaintenanceTicketsPanel: React.FC<MaintenanceTicketsPanelProps> = (
             {ticket.status !== 'CLOSED' && (
               <button
                 onClick={() => handleOpenProgress(ticket)}
-                className="w-full py-2 px-3 bg-slate-800 hover:bg-slate-700 text-amber-400 hover:text-amber-300 font-semibold rounded-lg text-xs border border-slate-700 transition flex items-center justify-center space-x-1.5"
+                className="w-full py-2 px-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-amber-700 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-300 font-semibold rounded-lg text-xs border border-slate-200 dark:border-slate-700 transition flex items-center justify-center space-x-1.5"
               >
                 <span>Avanzar Estado / Asignar</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -261,16 +268,16 @@ export const MaintenanceTicketsPanel: React.FC<MaintenanceTicketsPanelProps> = (
 
       {/* Modal: Create Ticket */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-              <h3 className="text-lg font-bold text-white flex items-center space-x-2">
-                <Wrench className="w-5 h-5 text-amber-400" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4 transition-colors">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+                <Wrench className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                 <span>Nuevo Ticket de Mantenimiento</span>
               </h3>
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="text-slate-400 hover:text-white"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -278,7 +285,7 @@ export const MaintenanceTicketsPanel: React.FC<MaintenanceTicketsPanelProps> = (
 
             <form onSubmit={handleCreateSubmit} className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold uppercase text-slate-300 mb-1">
+                <label className="block text-xs font-semibold uppercase text-slate-700 dark:text-slate-300 mb-1">
                   Título de la Falla *
                 </label>
                 <input
@@ -287,19 +294,19 @@ export const MaintenanceTicketsPanel: React.FC<MaintenanceTicketsPanelProps> = (
                   value={title}
                   onChange={e => setTitle(e.target.value)}
                   placeholder="Ej. Fuga en cisterna principal"
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold uppercase text-slate-300 mb-1">
+                  <label className="block text-xs font-semibold uppercase text-slate-700 dark:text-slate-300 mb-1">
                     Categoría *
                   </label>
                   <select
                     value={category}
                     onChange={e => setCategory(e.target.value as any)}
-                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
                   >
                     <option value="LIGHTING">Iluminación</option>
                     <option value="PLUMBING">Fontanería</option>
@@ -311,13 +318,13 @@ export const MaintenanceTicketsPanel: React.FC<MaintenanceTicketsPanelProps> = (
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold uppercase text-slate-300 mb-1">
+                  <label className="block text-xs font-semibold uppercase text-slate-700 dark:text-slate-300 mb-1">
                     Prioridad *
                   </label>
                   <select
                     value={priority}
                     onChange={e => setPriority(e.target.value as any)}
-                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
                   >
                     <option value="LOW">Baja</option>
                     <option value="MEDIUM">Media</option>
@@ -329,7 +336,7 @@ export const MaintenanceTicketsPanel: React.FC<MaintenanceTicketsPanelProps> = (
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold uppercase text-slate-300 mb-1">
+                  <label className="block text-xs font-semibold uppercase text-slate-700 dark:text-slate-300 mb-1">
                     Reportado Por *
                   </label>
                   <input
@@ -337,11 +344,11 @@ export const MaintenanceTicketsPanel: React.FC<MaintenanceTicketsPanelProps> = (
                     required
                     value={reporterName}
                     onChange={e => setReporterName(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold uppercase text-slate-300 mb-1">
+                  <label className="block text-xs font-semibold uppercase text-slate-700 dark:text-slate-300 mb-1">
                     Inmueble / Sector *
                   </label>
                   <input
@@ -349,13 +356,13 @@ export const MaintenanceTicketsPanel: React.FC<MaintenanceTicketsPanelProps> = (
                     required
                     value={houseNumber}
                     onChange={e => setHouseNumber(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase text-slate-300 mb-1">
+                <label className="block text-xs font-semibold uppercase text-slate-700 dark:text-slate-300 mb-1">
                   Ubicación Exacta *
                 </label>
                 <input
@@ -364,12 +371,12 @@ export const MaintenanceTicketsPanel: React.FC<MaintenanceTicketsPanelProps> = (
                   value={location}
                   onChange={e => setLocation(e.target.value)}
                   placeholder="Ej. Calle 3 frente a Casa 104"
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase text-slate-300 mb-1">
+                <label className="block text-xs font-semibold uppercase text-slate-700 dark:text-slate-300 mb-1">
                   Descripción Detallada *
                 </label>
                 <textarea
@@ -378,28 +385,15 @@ export const MaintenanceTicketsPanel: React.FC<MaintenanceTicketsPanelProps> = (
                   value={description}
                   onChange={e => setDescription(e.target.value)}
                   placeholder="Explique el desperfecto y posibles riesgos..."
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold uppercase text-slate-300 mb-1">
-                  URL de Fotografía / Evidencia (Opcional)
-                </label>
-                <input
-                  type="url"
-                  value={photoUrl}
-                  onChange={e => setPhotoUrl(e.target.value)}
-                  placeholder="https://images.residence.local/evidence1.jpg"
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
-                />
-              </div>
-
-              <div className="pt-3 flex justify-end space-x-2 border-t border-slate-800">
+              <div className="pt-3 flex justify-end space-x-2 border-t border-slate-200 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 text-sm text-slate-300 hover:text-white"
+                  className="px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
                 >
                   Cancelar
                 </button>
@@ -418,16 +412,16 @@ export const MaintenanceTicketsPanel: React.FC<MaintenanceTicketsPanelProps> = (
 
       {/* Modal: Update Ticket Progress */}
       {selectedTicketForProgress && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-              <h3 className="text-lg font-bold text-white flex items-center space-x-2">
-                <Wrench className="w-5 h-5 text-amber-400" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4 transition-colors">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+                <Wrench className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                 <span>Actualizar Ciclo de Vida: {selectedTicketForProgress.folio}</span>
               </h3>
               <button
                 onClick={() => setSelectedTicketForProgress(null)}
-                className="text-slate-400 hover:text-white"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -435,13 +429,13 @@ export const MaintenanceTicketsPanel: React.FC<MaintenanceTicketsPanelProps> = (
 
             <form onSubmit={handleUpdateSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold uppercase text-slate-300 mb-1">
+                <label className="block text-xs font-semibold uppercase text-slate-700 dark:text-slate-300 mb-1">
                   Nuevo Estado del Ticket *
                 </label>
                 <select
                   value={newStatus}
                   onChange={e => setNewStatus(e.target.value as any)}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
                 >
                   <option value="IN_PROGRESS">EN PROCESO (Asignado)</option>
                   <option value="RESOLVED">RESUELTO (Trabajo Finalizado)</option>
@@ -450,7 +444,7 @@ export const MaintenanceTicketsPanel: React.FC<MaintenanceTicketsPanelProps> = (
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase text-slate-300 mb-1">
+                <label className="block text-xs font-semibold uppercase text-slate-700 dark:text-slate-300 mb-1">
                   Técnico o Proveedor Asignado
                 </label>
                 <input
@@ -458,12 +452,12 @@ export const MaintenanceTicketsPanel: React.FC<MaintenanceTicketsPanelProps> = (
                   value={assignedTech}
                   onChange={e => setAssignedTech(e.target.value)}
                   placeholder="Ej. Servipro Fontanería / Juan Morales"
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase text-slate-300 mb-1">
+                <label className="block text-xs font-semibold uppercase text-slate-700 dark:text-slate-300 mb-1">
                   Notas de Avance y Hallazgos
                 </label>
                 <textarea
@@ -471,15 +465,15 @@ export const MaintenanceTicketsPanel: React.FC<MaintenanceTicketsPanelProps> = (
                   value={progressNotes}
                   onChange={e => setProgressNotes(e.target.value)}
                   placeholder="Describa el trabajo realizado, materiales o refacciones..."
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
                 />
               </div>
 
-              <div className="pt-3 flex justify-end space-x-2 border-t border-slate-800">
+              <div className="pt-3 flex justify-end space-x-2 border-t border-slate-200 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setSelectedTicketForProgress(null)}
-                  className="px-4 py-2 text-sm text-slate-300 hover:text-white"
+                  className="px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
                 >
                   Cancelar
                 </button>
