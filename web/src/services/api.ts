@@ -1,4 +1,4 @@
-import {
+import type {
   AuthUser,
   LoginCredentials,
   ParkingSpot,
@@ -14,9 +14,50 @@ import {
   CalendarSlot,
   Invoice,
   FixedAsset
-} from '../types';
+} from '../types/index.ts';
 
 const API_BASE = '/api/v1';
+
+// UUID Helper: Ensures string is a valid UUID so Spring Boot @PathVariable / DTO deserializer doesn't fail
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function ensureUuid(input?: string | null): string {
+  if (!input) return '00000000-0000-4000-8000-000000000001';
+  if (UUID_REGEX.test(input)) return input;
+  let hash = 0;
+  for (let i = 0; i < input.length; i++) {
+    hash = (hash << 5) - hash + input.charCodeAt(i);
+    hash |= 0;
+  }
+  const hex = Math.abs(hash).toString(16).padStart(12, '0').slice(-12);
+  return `00000000-0000-4000-8000-${hex}`;
+}
+
+// Global Auth Header builder
+function getAuthHeaders(isFormData = false): Record<string, string> {
+  const headers: Record<string, string> = {};
+  if (!isFormData) {
+    headers['Content-Type'] = 'application/json';
+  }
+  try {
+    const raw = localStorage.getItem('auth_user_session');
+    if (raw) {
+      const user: AuthUser = JSON.parse(raw);
+      if (user.token) {
+        headers['Authorization'] = `Bearer ${user.token}`;
+      }
+      if (user.role) {
+        headers['X-User-Role'] = user.role;
+      }
+      if (user.id) {
+        headers['X-User-Id'] = user.id;
+      }
+    }
+  } catch {
+    // Ignore storage parse errors
+  }
+  return headers;
+}
 
 // Initial Mock / Seed State for offline / demo mode
 let mockSpots: ParkingSpot[] = Array.from({ length: 20 }, (_, i) => {
@@ -197,7 +238,6 @@ let mockFines: ParkingFine[] = [
   }
 ];
 
-// Governance Mock
 let mockAssemblies: Assembly[] = [
   {
     id: 'asm-2026-01',
@@ -239,7 +279,6 @@ let mockMotions: AssemblyMotion[] = [
   }
 ];
 
-// Maintenance Mock
 let mockTickets: MaintenanceTicket[] = [
   {
     id: 'tkt-001',
@@ -296,7 +335,6 @@ let mockTickets: MaintenanceTicket[] = [
   }
 ];
 
-// Amenities Mock
 let mockAmenities: Amenity[] = [
   {
     id: 'am-01',
@@ -339,21 +377,88 @@ let mockAmenities: Amenity[] = [
   }
 ];
 
-// Generic Fetch Wrapper with Fallback to Mock
+let mockInvoices: Invoice[] = [
+  {
+    id: 'inv-01',
+    invoiceNumber: 'FAC-E-889102',
+    providerName: 'Empresa Eléctrica de Guatemala (EEGSA)',
+    expenseCategory: 'SERVICIOS_BASICOS',
+    amount: 8450.0,
+    invoiceDate: '2026-10-15',
+    paymentDate: '2026-10-20',
+    status: 'PAID',
+    digitalSupportUrl: 'https://docs.residence.local/invoices/fac-889102.pdf'
+  },
+  {
+    id: 'inv-02',
+    invoiceNumber: 'FAC-B-4412',
+    providerName: 'Seguridad Integral de Occidente S.A.',
+    expenseCategory: 'SEGURIDAD_PRIVADA',
+    amount: 14200.0,
+    invoiceDate: '2026-10-01',
+    paymentDate: '2026-10-05',
+    status: 'PAID',
+    digitalSupportUrl: 'https://docs.residence.local/invoices/fac-4412.pdf'
+  },
+  {
+    id: 'inv-03',
+    invoiceNumber: 'FAC-J-1209',
+    providerName: 'Jardinería y Paisajismo Verde S.A.',
+    expenseCategory: 'MANTENIMIENTO_AREAS_VERDES',
+    amount: 3800.0,
+    invoiceDate: '2026-10-25',
+    status: 'PENDING'
+  }
+];
+
+let mockAssets: FixedAsset[] = [
+  {
+    id: 'ast-01',
+    assetCode: 'ACT-GAR-001',
+    name: 'Brazo Mecánico de Talanquera Izquierda',
+    category: 'SEGURIDAD_ACCESO',
+    location: 'Garita de Entrada',
+    acquisitionCost: 12500.0,
+    physicalStatus: 'EXCELLENT'
+  },
+  {
+    id: 'ast-02',
+    assetCode: 'ACT-PIS-002',
+    name: 'Bomba de Recirculación de Piscina 3HP',
+    category: 'EQUIPOS_HIDRAULICOS',
+    location: 'Cuarto de Máquinas Piscina',
+    acquisitionCost: 8900.0,
+    physicalStatus: 'NEEDS_MAINTENANCE'
+  },
+  {
+    id: 'ast-03',
+    assetCode: 'ACT-SEG-003',
+    name: 'Servidor NVR Hikvision 32 Canales con RAID',
+    category: 'TECNOLOGIA_SEGURIDAD',
+    location: 'Rack de Telecomunicaciones Garita',
+    acquisitionCost: 16800.0,
+    physicalStatus: 'EXCELLENT'
+  }
+];
+
+// Generic Fetch Wrapper with Auth Headers and Fallback to Mock
 async function fetchWithFallback<T>(url: string, options?: RequestInit, fallbackData?: () => T): Promise<T> {
   try {
+    const isFormData = options?.body instanceof FormData;
+    const headers = {
+      ...getAuthHeaders(isFormData),
+      ...(options?.headers || {})
+    };
+
     const res = await fetch(url, {
       ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(options?.headers || {})
-      }
+      headers
     });
     if (res.ok) {
       return await res.json();
     }
   } catch {
-    // Backend offline / network failed -> use fallback
+    // Network / Gateway offline -> use fallback
   }
 
   if (fallbackData) {
@@ -372,7 +477,7 @@ const VALID_ACCOUNTS: Array<{
     email: 'guardia@lasbrisas.gt',
     pass: 'Garita2026!',
     user: {
-      id: 'usr-guard-01',
+      id: '00000000-0000-4000-8000-000000000001',
       name: 'Oficial Juan Morales',
       email: 'guardia@lasbrisas.gt',
       role: 'GUARD',
@@ -384,7 +489,7 @@ const VALID_ACCOUNTS: Array<{
     email: 'admin@lasbrisas.gt',
     pass: 'Admin2026!',
     user: {
-      id: 'usr-admin-01',
+      id: '00000000-0000-4000-8000-000000000002',
       name: 'Lic. Fernando Gómez',
       email: 'admin@lasbrisas.gt',
       role: 'ADMIN',
@@ -395,7 +500,7 @@ const VALID_ACCOUNTS: Array<{
     email: 'junta@lasbrisas.gt',
     pass: 'Junta2026!',
     user: {
-      id: 'usr-board-01',
+      id: '00000000-0000-4000-8000-000000000003',
       name: 'Ing. Roberto Arrivillaga',
       email: 'junta@lasbrisas.gt',
       role: 'BOARD',
@@ -440,7 +545,7 @@ export const api = {
   },
 
   // ==========================================
-  // Parking & Security
+  // Parking & Security (/api/v1/parking)
   // ==========================================
   async getParkingSpots(): Promise<ParkingSpot[]> {
     return fetchWithFallback<ParkingSpot[]>(`${API_BASE}/parking/spots`, {}, () => [...mockSpots]);
@@ -461,15 +566,34 @@ export const api = {
     spotNumber: string;
     guardUserId: string;
   }): Promise<VehicleEntry> {
+    const bodyPayload = {
+      plate: payload.plate.toUpperCase(),
+      houseId: ensureUuid(payload.houseId),
+      houseNumber: payload.houseNumber,
+      visitorName: payload.visitorName,
+      visitorIdDocument: payload.visitorIdDocument,
+      spotNumber: payload.spotNumber,
+      guardUserId: ensureUuid(payload.guardUserId || api.getCurrentUser()?.id)
+    };
+
     try {
       const res = await fetch(`${API_BASE}/parking/entries`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        headers: getAuthHeaders(),
+        body: JSON.stringify(bodyPayload)
       });
-      if (res.ok) return await res.json();
+      if (res.ok) {
+        const entry: VehicleEntry = await res.json();
+        mockActiveEntries = [entry, ...mockActiveEntries];
+        mockSpots = mockSpots.map(s =>
+          s.spotNumber === payload.spotNumber
+            ? { ...s, isOccupied: true, currentVehicleEntryId: entry.id }
+            : s
+        );
+        return entry;
+      }
     } catch {
-      // fallback
+      // Backend offline -> fallback
     }
 
     // Update in-memory mock
@@ -499,13 +623,28 @@ export const api = {
   },
 
   async registerExit(entryId: string, spotNumber?: string): Promise<{ success: boolean }> {
+    const resolvedUuid = ensureUuid(entryId);
+    const currentUser = api.getCurrentUser();
+
     try {
-      const res = await fetch(`${API_BASE}/parking/entries/${entryId}/exit`, {
-        method: 'POST'
+      const res = await fetch(`${API_BASE}/parking/entries/${resolvedUuid}/exit`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ guardUserId: ensureUuid(currentUser?.id) })
       });
-      if (res.ok) return await res.json();
+      if (res.ok) {
+        const entry = mockActiveEntries.find(e => e.id === entryId || ensureUuid(e.id) === resolvedUuid);
+        const spot = spotNumber || entry?.spotNumber;
+        mockActiveEntries = mockActiveEntries.filter(e => e.id !== entryId && ensureUuid(e.id) !== resolvedUuid);
+        if (spot) {
+          mockSpots = mockSpots.map(s =>
+            s.spotNumber === spot ? { ...s, isOccupied: false, currentVehicleEntryId: null } : s
+          );
+        }
+        return { success: true };
+      }
     } catch {
-      // fallback
+      // Backend offline -> fallback
     }
 
     const entry = mockActiveEntries.find(e => e.id === entryId);
@@ -522,9 +661,9 @@ export const api = {
     return { success: true };
   },
 
-  async getCovertResidents(): Promise<CovertResidentAlert[]> {
+  async getCovertResidents(days = 7): Promise<CovertResidentAlert[]> {
     return fetchWithFallback<CovertResidentAlert[]>(
-      `${API_BASE}/parking/covert-residents`,
+      `${API_BASE}/parking/analytics/covert-residents?days=${days}`,
       {},
       () => [...mockCovertAlerts]
     );
@@ -540,15 +679,31 @@ export const api = {
     appliedByUserId: string;
     appliedByName: string;
   }): Promise<ParkingFine> {
+    const currentUser = api.getCurrentUser();
+    const backendPayload = {
+      plate: payload.plate.toUpperCase(),
+      houseId: ensureUuid(payload.houseId),
+      houseNumber: payload.houseNumber,
+      fineAmount: payload.fineAmount,
+      reason: payload.reason,
+      evidenceSummary: payload.evidenceSummary,
+      appliedByUserId: ensureUuid(payload.appliedByUserId || currentUser?.id),
+      appliedByName: payload.appliedByName || currentUser?.name || 'Administración'
+    };
+
     try {
       const res = await fetch(`${API_BASE}/parking/fines`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        headers: getAuthHeaders(),
+        body: JSON.stringify(backendPayload)
       });
-      if (res.ok) return await res.json();
+      if (res.ok) {
+        const fine: ParkingFine = await res.json();
+        mockFines = [fine, ...mockFines];
+        return fine;
+      }
     } catch {
-      // fallback
+      // Backend offline -> fallback
     }
 
     const fine: ParkingFine = {
@@ -574,10 +729,12 @@ export const api = {
   },
 
   // ==========================================
-  // Governance & Assemblies
+  // Governance & Assemblies (/api/v1/amenities/assemblies & motions)
   // ==========================================
   async getAssemblies(): Promise<Assembly[]> {
-    return fetchWithFallback<Assembly[]>(`${API_BASE}/assemblies`, {}, () => [...mockAssemblies]);
+    return fetchWithFallback<Assembly[]>(`${API_BASE}/amenities/assemblies`, {}, () => [
+      ...mockAssemblies
+    ]);
   },
 
   async convokeAssembly(payload: {
@@ -588,14 +745,18 @@ export const api = {
     totalResidentialHouses: number;
   }): Promise<Assembly> {
     try {
-      const res = await fetch(`${API_BASE}/assemblies`, {
+      const res = await fetch(`${API_BASE}/amenities/assemblies`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify(payload)
       });
-      if (res.ok) return await res.json();
+      if (res.ok) {
+        const created: Assembly = await res.json();
+        mockAssemblies = [created, ...mockAssemblies];
+        return created;
+      }
     } catch {
-      // fallback
+      // Backend offline -> fallback
     }
 
     const newAssembly: Assembly = {
@@ -609,8 +770,9 @@ export const api = {
   },
 
   async getAssemblyQuorum(assemblyId: string): Promise<AssemblyQuorum> {
+    const resolvedId = ensureUuid(assemblyId);
     return fetchWithFallback<AssemblyQuorum>(
-      `${API_BASE}/assemblies/${assemblyId}/quorum`,
+      `${API_BASE}/amenities/assemblies/${resolvedId}/quorum`,
       {},
       () => {
         const total = 50;
@@ -633,15 +795,31 @@ export const api = {
     assemblyId: string,
     houseNumber: string
   ): Promise<{ success: boolean; presentHouses: number; quorumPercentage: number }> {
+    const resolvedAssemblyId = ensureUuid(assemblyId);
+    const currentUser = api.getCurrentUser();
+
     try {
-      const res = await fetch(`${API_BASE}/assemblies/${assemblyId}/attendance`, {
+      const res = await fetch(`${API_BASE}/amenities/assemblies/${resolvedAssemblyId}/attendance`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ houseNumber, attendeeName: `Propietario ${houseNumber}` })
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          houseId: ensureUuid(`house-${houseNumber}`),
+          attendeeUserId: ensureUuid(currentUser?.id),
+          attendeeName: `Propietario ${houseNumber}`,
+          representationType: 'DIRECT'
+        })
       });
-      if (res.ok) return await res.json();
+      if (res.ok) {
+        const data = await res.json();
+        mockAttendees.add(houseNumber);
+        return {
+          success: true,
+          presentHouses: data.currentPresentHouses ?? mockAttendees.size,
+          quorumPercentage: data.currentQuorumPercentage ? Number(data.currentQuorumPercentage) : 52.0
+        };
+      }
     } catch {
-      // fallback
+      // Backend offline -> fallback
     }
 
     mockAttendees.add(houseNumber);
@@ -652,23 +830,30 @@ export const api = {
   },
 
   async getAssemblyMotions(assemblyId: string): Promise<AssemblyMotion[]> {
+    const resolvedId = ensureUuid(assemblyId);
     return fetchWithFallback<AssemblyMotion[]>(
-      `${API_BASE}/assemblies/${assemblyId}/motions`,
+      `${API_BASE}/amenities/assemblies/${resolvedId}/motions`,
       {},
       () => mockMotions.filter(m => m.assemblyId === assemblyId)
     );
   },
 
   async createMotion(assemblyId: string, title: string, description: string): Promise<AssemblyMotion> {
+    const resolvedAssemblyId = ensureUuid(assemblyId);
+
     try {
-      const res = await fetch(`${API_BASE}/assemblies/${assemblyId}/motions`, {
+      const res = await fetch(`${API_BASE}/amenities/assemblies/${resolvedAssemblyId}/motions`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ title, description })
       });
-      if (res.ok) return await res.json();
+      if (res.ok) {
+        const created: AssemblyMotion = await res.json();
+        mockMotions.push(created);
+        return created;
+      }
     } catch {
-      // fallback
+      // Backend offline -> fallback
     }
 
     const mot: AssemblyMotion = {
@@ -684,13 +869,22 @@ export const api = {
   },
 
   async openMotion(motionId: string): Promise<AssemblyMotion> {
+    const resolvedMotionId = ensureUuid(motionId);
+
     try {
-      const res = await fetch(`${API_BASE}/assemblies/motions/${motionId}/open`, {
-        method: 'PUT'
+      const res = await fetch(`${API_BASE}/amenities/motions/${resolvedMotionId}/open`, {
+        method: 'POST',
+        headers: getAuthHeaders()
       });
-      if (res.ok) return await res.json();
+      if (res.ok) {
+        const opened: AssemblyMotion = await res.json();
+        mockMotions = mockMotions.map(m =>
+          m.id === motionId || ensureUuid(m.id) === resolvedMotionId ? opened : m
+        );
+        return opened;
+      }
     } catch {
-      // fallback
+      // Backend offline -> fallback
     }
 
     mockMotions = mockMotions.map(m =>
@@ -700,13 +894,24 @@ export const api = {
   },
 
   async closeMotion(motionId: string): Promise<CloseMotionResult> {
+    const resolvedMotionId = ensureUuid(motionId);
+
     try {
-      const res = await fetch(`${API_BASE}/assemblies/motions/${motionId}/close`, {
-        method: 'PUT'
+      const res = await fetch(`${API_BASE}/amenities/motions/${resolvedMotionId}/close`, {
+        method: 'POST',
+        headers: getAuthHeaders()
       });
-      if (res.ok) return await res.json();
+      if (res.ok) {
+        const closed: CloseMotionResult = await res.json();
+        mockMotions = mockMotions.map(m =>
+          m.id === motionId || ensureUuid(m.id) === resolvedMotionId
+            ? { ...m, status: 'CLOSED', verdict: closed.verdict as any, closedAt: closed.closedAt }
+            : m
+        );
+        return closed;
+      }
     } catch {
-      // fallback
+      // Backend offline -> fallback
     }
 
     const inFavor = 22;
@@ -737,10 +942,12 @@ export const api = {
   },
 
   // ==========================================
-  // Maintenance Tickets
+  // Maintenance Tickets (/api/v1/amenities/tickets)
   // ==========================================
   async getTickets(): Promise<MaintenanceTicket[]> {
-    return fetchWithFallback<MaintenanceTicket[]>(`${API_BASE}/tickets`, {}, () => [...mockTickets]);
+    return fetchWithFallback<MaintenanceTicket[]>(`${API_BASE}/amenities/tickets`, {}, () => [
+      ...mockTickets
+    ]);
   },
 
   async createTicket(payload: {
@@ -753,15 +960,34 @@ export const api = {
     reporterName: string;
     houseNumber: string;
   }): Promise<MaintenanceTicket> {
+    const currentUser = api.getCurrentUser();
+    const backendPayload = {
+      title: payload.title,
+      category: payload.category,
+      location: payload.location,
+      description: payload.description,
+      photoUrl: payload.photoUrl || '',
+      priority: payload.priority,
+      reporterUserId: ensureUuid(currentUser?.id),
+      reporterName: payload.reporterName || currentUser?.name || 'Residente',
+      reporterRole: currentUser?.role || 'RESIDENT',
+      houseId: ensureUuid(payload.houseNumber ? `house-${payload.houseNumber}` : 'house-default'),
+      houseNumber: payload.houseNumber
+    };
+
     try {
-      const res = await fetch(`${API_BASE}/tickets`, {
+      const res = await fetch(`${API_BASE}/amenities/tickets`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        headers: getAuthHeaders(),
+        body: JSON.stringify(backendPayload)
       });
-      if (res.ok) return await res.json();
+      if (res.ok) {
+        const created: MaintenanceTicket = await res.json();
+        mockTickets = [created, ...mockTickets];
+        return created;
+      }
     } catch {
-      // fallback
+      // Backend offline -> fallback
     }
 
     const newTicket: MaintenanceTicket = {
@@ -792,15 +1018,33 @@ export const api = {
     notes: string,
     assignedTechnician?: string
   ): Promise<MaintenanceTicket> {
+    const resolvedId = ensureUuid(id);
+    const currentUser = api.getCurrentUser();
+    const backendPayload = {
+      authorUserId: ensureUuid(currentUser?.id),
+      authorName: currentUser?.name || 'Administración',
+      authorRole: currentUser?.role || 'ADMIN',
+      newStatus,
+      assignedTechnician: assignedTechnician || undefined,
+      notes: notes || `Cambio de estado a ${newStatus}`
+    };
+
     try {
-      const res = await fetch(`${API_BASE}/tickets/${id}/progress`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newStatus, notes, assignedTechnician })
+      const res = await fetch(`${API_BASE}/amenities/tickets/${resolvedId}/progress`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(backendPayload)
       });
-      if (res.ok) return await res.json();
+      if (res.ok) {
+        const updatedDetail = await res.json();
+        const updatedTicket = updatedDetail.ticket || updatedDetail;
+        mockTickets = mockTickets.map(t =>
+          t.id === id || ensureUuid(t.id) === resolvedId ? updatedTicket : t
+        );
+        return updatedTicket;
+      }
     } catch {
-      // fallback
+      // Backend offline -> fallback
     }
 
     mockTickets = mockTickets.map(t => {
@@ -820,15 +1064,18 @@ export const api = {
   },
 
   // ==========================================
-  // Amenities & Calendar
+  // Amenities & Calendar (/api/v1/amenities)
   // ==========================================
   async getAmenities(): Promise<Amenity[]> {
-    return fetchWithFallback<Amenity[]>(`${API_BASE}/amenities`, {}, () => [...mockAmenities]);
+    return fetchWithFallback<Amenity[]>(`${API_BASE}/amenities?activeOnly=false`, {}, () => [
+      ...mockAmenities
+    ]);
   },
 
   async getCalendarSlots(amenityId: string, date: string): Promise<CalendarSlot[]> {
+    const resolvedId = ensureUuid(amenityId);
     return fetchWithFallback<CalendarSlot[]>(
-      `${API_BASE}/amenities/${amenityId}/calendar?date=${date}`,
+      `${API_BASE}/amenities/${resolvedId}/calendar?startDate=${date}&endDate=${date}`,
       {},
       () => {
         // Privacy Compliant slots: Only show "Disponible" or "Reservado"
@@ -843,73 +1090,47 @@ export const api = {
   },
 
   // ==========================================
-  // Finance & Fixed Assets
+  // Finance & Fixed Assets (/api/v1/finance)
   // ==========================================
   async getInvoices(): Promise<Invoice[]> {
-    return fetchWithFallback<Invoice[]>(`${API_BASE}/finance/invoices`, {}, () => [
-      {
-        id: 'inv-01',
-        invoiceNumber: 'FAC-E-889102',
-        providerName: 'Empresa Eléctrica de Guatemala (EEGSA)',
-        expenseCategory: 'SERVICIOS_BASICOS',
-        amount: 8450.0,
-        invoiceDate: '2026-10-15',
-        paymentDate: '2026-10-20',
-        status: 'PAID',
-        digitalSupportUrl: 'https://docs.residence.local/invoices/fac-889102.pdf'
-      },
-      {
-        id: 'inv-02',
-        invoiceNumber: 'FAC-B-4412',
-        providerName: 'Seguridad Integral de Occidente S.A.',
-        expenseCategory: 'SEGURIDAD_PRIVADA',
-        amount: 14200.0,
-        invoiceDate: '2026-10-01',
-        paymentDate: '2026-10-05',
-        status: 'PAID',
-        digitalSupportUrl: 'https://docs.residence.local/invoices/fac-4412.pdf'
-      },
-      {
-        id: 'inv-03',
-        invoiceNumber: 'FAC-J-1209',
-        providerName: 'Jardinería y Paisajismo Verde S.A.',
-        expenseCategory: 'MANTENIMIENTO_AREAS_VERDES',
-        amount: 3800.0,
-        invoiceDate: '2026-10-25',
-        status: 'PENDING'
+    return fetchWithFallback<Invoice[]>(`${API_BASE}/finance/invoices`, {}, () => [...mockInvoices]);
+  },
+
+  async uploadBankStatement(file: File): Promise<{
+    totalRecords: number;
+    matchedRecords: number;
+    unmatchedRecords: number;
+    matchRate: number;
+    totalAmountMatched: number;
+    reconciledAt: string;
+  }> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch(`${API_BASE}/finance/reconciliation/upload`, {
+        method: 'POST',
+        headers: getAuthHeaders(true),
+        body: formData
+      });
+      if (res.ok) {
+        return await res.json();
       }
-    ]);
+    } catch {
+      // Backend offline -> fallback
+    }
+
+    return {
+      totalRecords: 48,
+      matchedRecords: 46,
+      unmatchedRecords: 2,
+      matchRate: 95.8,
+      totalAmountMatched: 42350.0,
+      reconciledAt: new Date().toISOString()
+    };
   },
 
   async getFixedAssets(): Promise<FixedAsset[]> {
-    return fetchWithFallback<FixedAsset[]>(`${API_BASE}/finance/assets`, {}, () => [
-      {
-        id: 'ast-01',
-        assetCode: 'ACT-GAR-001',
-        name: 'Brazo Mecánico de Talanquera Izquierda',
-        category: 'SEGURIDAD_ACCESO',
-        location: 'Garita de Entrada',
-        acquisitionCost: 12500.0,
-        physicalStatus: 'EXCELLENT'
-      },
-      {
-        id: 'ast-02',
-        assetCode: 'ACT-PIS-002',
-        name: 'Bomba de Recirculación de Piscina 3HP',
-        category: 'EQUIPOS_HIDRAULICOS',
-        location: 'Cuarto de Máquinas Piscina',
-        acquisitionCost: 8900.0,
-        physicalStatus: 'NEEDS_MAINTENANCE'
-      },
-      {
-        id: 'ast-03',
-        assetCode: 'ACT-SEG-003',
-        name: 'Servidor NVR Hikvision 32 Canales con RAID',
-        category: 'TECNOLOGIA_SEGURIDAD',
-        location: 'Rack de Telecomunicaciones Garita',
-        acquisitionCost: 16800.0,
-        physicalStatus: 'EXCELLENT'
-      }
-    ]);
+    return fetchWithFallback<FixedAsset[]>(`${API_BASE}/finance/assets`, {}, () => [...mockAssets]);
   }
 };

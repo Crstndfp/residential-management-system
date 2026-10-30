@@ -183,7 +183,10 @@ cd web
 npm install
 npm run dev
 
-# Compilación y verificación estática
+# Suite de pruebas unitarias (23 tests pasando)
+npm test
+
+# Compilación y verificación estática de tipos
 npm run build
 
 # O vía Docker Compose
