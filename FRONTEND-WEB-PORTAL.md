@@ -120,10 +120,11 @@ npm run dev
 ```
 La aplicación inicia en `http://localhost:3000`.
 
-### Verificación de Compilación
+### Verificación de Compilación y Suite de Pruebas Unitarias
 ```bash
 cd web
-npm run build
+npm test       # 23 tests unitarios pasando al 100% (Node native test runner)
+npm run build  # Compilación TypeScript y Vite Bundle sin advertencias ni errores
 ```
 
 ### Ejecución con Docker Compose
@@ -131,3 +132,31 @@ npm run build
 docker compose up web -d
 ```
 Acceder mediante `http://localhost:3000`.
+
+---
+
+## 6. Integración y Mapeo de Endpoints a Microservicios (API Gateway)
+
+El cliente `web/src/services/api.ts` conecta de forma transparente con los 4 microservicios backend a través del API Gateway Nginx (`/api/v1/*`) o proxy de desarrollo Vite (`localhost:8080`), inyectando cabeceras de autorización (`Authorization: Bearer <token>`, `X-User-Role: <role>`, `X-User-Id: <id>`), sanitizando identificadores hacia formato UUID estándar y manteniendo fallback resiliente a almacenamiento en memoria cuando el gateway o microservicio se encuentre fuera de línea:
+
+| Dominio / Módulo | Endpoint Frontend | Endpoint Backend Gateway | Microservicio Destino | Método | Propósito Funcional |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Parqueo & Garita** | `/api/v1/parking/spots` | `/api/v1/parking/spots` | `parking-service` | `GET` | Consulta del estado de los 20 espacios de visita (`P-01` a `P-20`). |
+| **Parqueo & Garita** | `/api/v1/parking/entries` | `/api/v1/parking/entries` | `parking-service` | `POST` | Registro de ingreso vehicular de visitante y ocupación de espacio. |
+| **Parqueo & Garita** | `/api/v1/parking/entries/{id}/exit` | `/api/v1/parking/entries/{id}/exit` | `parking-service` | `POST` | Registro de salida de vehículo y liberación automática de bahía. |
+| **Seguridad & Analítica** | `/api/v1/parking/covert-residents` | `/api/v1/parking/analytics/covert-residents?days=7` | `parking-service` | `GET` | Detección algorítmica de vehículos con $\ge 3$ pernoctaciones. |
+| **Seguridad & Multas** | `/api/v1/parking/fines` | `/api/v1/parking/fines` | `parking-service` | `POST` | Emisión y vinculación financiera de multa por parqueo indebido. |
+| **Gobernanza & Asambleas**| `/api/v1/amenities/assemblies` | `/api/v1/amenities/assemblies` | `amenities-service` | `POST` | Convocatoria formal de asambleas ordinarias y extraordinarias. |
+| **Gobernanza & Asambleas**| `/api/v1/amenities/assemblies/{id}/quorum` | `/api/v1/amenities/assemblies/{id}/quorum` | `amenities-service` | `GET` | Cálculo dinámico de asistencia y validación del quórum legal (50%). |
+| **Gobernanza & Asambleas**| `/api/v1/amenities/assemblies/{id}/attendance` | `/api/v1/amenities/assemblies/{id}/attendance` | `amenities-service` | `POST` | Pase de lista digital de copropietarios asistentes o representados. |
+| **Gobernanza & Mociones** | `/api/v1/amenities/assemblies/{id}/motions` | `/api/v1/amenities/assemblies/{id}/motions` | `amenities-service` | `POST` | Creación de puntos de deliberación sometidos a votación. |
+| **Gobernanza & Mociones** | `/api/v1/amenities/motions/{id}/open` | `/api/v1/amenities/motions/{id}/open` | `amenities-service` | `POST` | Apertura de moción para recepción de votos presenciales y remotos. |
+| **Gobernanza & Mociones** | `/api/v1/amenities/motions/{id}/close` | `/api/v1/amenities/motions/{id}/close` | `amenities-service` | `POST` | Cierre de moción, escrutinio formal y generación del veredicto. |
+| **Amenidades Comunes** | `/api/v1/amenities` | `/api/v1/amenities?activeOnly=false` | `amenities-service` | `GET` | Consulta de catálogo de áreas sociales, costos y capacidades. |
+| **Calendario Privacidad** | `/api/v1/amenities/{id}/calendar` | `/api/v1/amenities/{id}/calendar?startDate=...&endDate=...` | `amenities-service` | `GET` | Horarios disponibles y reservados protegiendo la identidad de vecinos. |
+| **Mantenimiento Físico** | `/api/v1/amenities/tickets` | `/api/v1/amenities/tickets` | `amenities-service` | `GET` | Listado general de tickets clasificados por categoría y estado. |
+| **Mantenimiento Físico** | `/api/v1/amenities/tickets` | `/api/v1/amenities/tickets` | `amenities-service` | `POST` | Alta de reporte de falla comunitaria con prioridad y ubicación. |
+| **Mantenimiento Físico** | `/api/v1/amenities/tickets/{id}/progress` | `/api/v1/amenities/tickets/{id}/progress` | `amenities-service` | `PATCH` | Transición de estado (`OPEN` $\to$ `IN_PROGRESS` $\to$ `RESOLVED`), asignación de técnico y bitácora de notas. |
+| **Finanzas & Facturación**| `/api/v1/finance/invoices` | `/api/v1/finance/invoices` | `finance-service` | `GET` | Listado de facturas de egresos con soporte digital. |
+| **Conciliación Bancaria** | `/api/v1/finance/reconciliation/upload` | `/api/v1/finance/reconciliation/upload` | `finance-service` | `POST` | Carga multipart de estado de cuenta bancario Excel (.xlsx, .csv). |
+| **Activos Comunitarios** | `/api/v1/finance/assets` | `/api/v1/finance/assets` | `finance-service` | `GET` | Inventario patrimonial valorizado de activos fijos del condominio. |
