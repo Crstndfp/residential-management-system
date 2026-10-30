@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Invoice, FixedAsset } from '../../types';
+import { api } from '../../services/api';
 
 interface FinanceOverviewPanelProps {
   invoices: Invoice[];
@@ -28,6 +29,29 @@ export const FinanceOverviewPanel: React.FC<FinanceOverviewPanelProps> = ({
     matchRate: number;
     totalAmountMatched: number;
   } | null>(null);
+
+  const handleRealFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    const toastId = toast.loading(`Cargando y conciliando ${file.name}...`);
+    try {
+      const summary = await api.uploadBankStatement(file);
+      setReconciliationResult({
+        totalRecords: summary.totalRecords,
+        matchedRecords: summary.matchedRecords,
+        matchRate: summary.matchRate,
+        totalAmountMatched: summary.totalAmountMatched
+      });
+      toast.success(`Conciliación bancaria completada (${summary.matchRate}% de cruce)`, { id: toastId });
+    } catch {
+      toast.error('Error al procesar el archivo bancario', { id: toastId });
+    } finally {
+      setIsUploading(false);
+      e.target.value = '';
+    }
+  };
 
   const handleSimulateUpload = () => {
     setIsUploading(true);
@@ -217,16 +241,27 @@ export const FinanceOverviewPanel: React.FC<FinanceOverviewPanelProps> = ({
               </p>
             </div>
 
-            <div className="max-w-md mx-auto">
+            <div className="max-w-md mx-auto space-y-2">
+              <label className="w-full py-3 px-6 bg-teal-600 hover:bg-teal-500 text-white font-semibold rounded-xl text-sm shadow-lg shadow-teal-600/30 transition flex items-center justify-center space-x-2 cursor-pointer">
+                <UploadCloud className="w-4 h-4" />
+                <span>{isUploading ? 'Procesando Conciliación...' : 'Seleccionar Archivo Excel (.xlsx, .csv)'}</span>
+                <input
+                  type="file"
+                  accept=".xlsx,.xls,.csv"
+                  className="hidden"
+                  onChange={handleRealFileUpload}
+                  disabled={isUploading}
+                />
+              </label>
+
               <button
+                type="button"
                 onClick={handleSimulateUpload}
                 disabled={isUploading}
-                className="w-full py-3 px-6 bg-teal-600 hover:bg-teal-500 text-white font-semibold rounded-xl text-sm shadow-lg shadow-teal-600/30 transition flex items-center justify-center space-x-2 disabled:opacity-50"
+                className="w-full py-2 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium rounded-xl text-xs transition flex items-center justify-center space-x-2 disabled:opacity-50"
               >
-                <FileSpreadsheet className="w-4 h-4" />
-                <span>
-                  {isUploading ? 'Procesando Conciliación...' : 'Cargar Archivo Excel de Prueba'}
-                </span>
+                <FileSpreadsheet className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                <span>O usar simulación de prueba (demo)</span>
               </button>
             </div>
           </div>
