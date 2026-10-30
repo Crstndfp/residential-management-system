@@ -2,11 +2,13 @@
 
 ## 1. Visión General & Racional Arquitectónico
 
-La **Fase 2** entrega el portal web administrativo y de garita vehicular para el **Sistema de Gestión Residencial**. Desarrollado como una aplicación de una sola página (**SPA**) reactiva y modular utilizando **React 18**, **TypeScript**, **Tailwind CSS** y empaquetada con **Vite**, provee una interfaz unificada protegida mediante **Autenticación Obligatoria y Control de Acceso Basado en Roles (RBAC)** para evitar el acceso no autorizado y la generación de datos no deseados:
+La **Fase 2** entrega el portal web administrativo y de garita vehicular para el **Sistema de Gestión Residencial**. Desarrollado como una aplicación de una sola página (**SPA**) reactiva y modular utilizando **React 18**, **TypeScript**, **Tailwind CSS**, notificaciones de feedback instantáneo con **`react-hot-toast`** y empaquetada con **Vite**, provee una interfaz unificada con **soporte dual de temas (Tema Claro / Tema Oscuro)** y protegida mediante **Autenticación Obligatoria y Control de Acceso Basado en Roles (RBAC)**:
 
-1. **Pantalla de Login & Puerta de Enlace (Gatekeeper):** Bloquea todo acceso no autenticado. Valida credenciales corporativas (usuario y contraseña) para guardias, administradores y miembros de junta.
-2. **Operador de Garita (Tablet Touch - US-601):** Al autenticarse como guardia, el sistema restringe estrictamente el acceso a la interfaz táctil de garita, ocultando por completo las pestañas de administración general, finanzas y gobernanza para prevenir manipulación indebida.
-3. **Junta Directiva & Administrador General:** Tablero integral de control para la gobernanza (asambleas, quórum legal), seguridad analítica (residentes encubiertos), reservas protegidas de amenidades, gestión de incidencias técnicas e inventario financiero.
+1. **Tema Dual Dinámico (Claro / Oscuro):** Selector de tema con persistencia en `localStorage` y botón de alternancia rápida (Sol / Luna) en la cabecera y pantalla de inicio de sesión, optimizando la visibilidad bajo iluminación natural en tabletas de garita o ambientes oscuros de oficina.
+2. **Sistema de Alertas y Notificaciones con `react-hot-toast`:** Mensajes emergentes no invasivos con iconos de éxito, error y carga en vivo al registrar ingresos, marcar salidas, emitir multas, reservar amenidades y conciliar estados bancarios.
+3. **Pantalla de Login & Puerta de Enlace (Gatekeeper):** Bloquea todo acceso no autenticado. Valida credenciales corporativas (usuario y contraseña) para guardias, administradores y miembros de junta.
+4. **Operador de Garita (Tablet Touch - US-601):** Al autenticarse como guardia, el sistema restringe estrictamente el acceso a la interfaz táctil de garita, ocultando por completo las pestañas de administración general, finanzas y gobernanza para prevenir manipulación indebida.
+5. **Junta Directiva & Administrador General:** Tablero integral de control para la gobernanza (asambleas, quórum legal), seguridad analítica (residentes encubiertos), reservas protegidas de amenidades, gestión de incidencias técnicas e inventario financiero.
 
 ### Credenciales Preconfiguradas para Demostración
 

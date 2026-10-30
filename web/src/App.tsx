@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Toaster } from 'react-hot-toast';
 import { Navbar, ViewMode, AdminTab } from './components/layout/Navbar';
 import { LoginView } from './components/auth/LoginView';
 import { ParkingSpotGrid } from './components/garita/ParkingSpotGrid';
@@ -11,6 +12,7 @@ import { FinanceOverviewPanel } from './components/admin/FinanceOverviewPanel';
 import { api } from './services/api';
 import {
   AuthUser,
+  ThemeMode,
   ParkingSpot,
   VehicleEntry,
   CovertResidentAlert,
@@ -25,6 +27,31 @@ import {
 } from './types';
 
 export const App: React.FC = () => {
+  // Theme State (Persisted in localStorage, default 'light' / 'dark')
+  const [theme, setTheme] = useState<ThemeMode>(() => {
+    try {
+      const saved = localStorage.getItem('app_theme');
+      return (saved === 'dark' || saved === 'light') ? saved : 'dark';
+    } catch {
+      return 'dark';
+    }
+  });
+
+  // Apply theme class to HTML element
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+    localStorage.setItem('app_theme', theme);
+  }, [theme]);
+
+  const handleToggleTheme = () => {
+    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
+  };
+
   // Authentication State
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => api.getCurrentUser());
 
@@ -231,16 +258,56 @@ export const App: React.FC = () => {
     setTickets(prev => prev.map(cur => (cur.id === id ? t : cur)));
   };
 
-  // If unauthenticated: render Login View (Gatekeeper)
+  // If unauthenticated: render Login View
   if (!currentUser) {
-    return <LoginView onLoginSuccess={handleLoginSuccess} onLogin={api.login} />;
+    return (
+      <>
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 3500,
+            style: {
+              background: theme === 'dark' ? '#0F172A' : '#FFFFFF',
+              color: theme === 'dark' ? '#F8FAFC' : '#0F172A',
+              border: theme === 'dark' ? '1px solid #1E293B' : '1px solid #E2E8F0',
+              borderRadius: '12px',
+              fontSize: '13px',
+              fontWeight: 500
+            }
+          }}
+        />
+        <LoginView
+          onLoginSuccess={handleLoginSuccess}
+          onLogin={api.login}
+          theme={theme}
+          onToggleTheme={handleToggleTheme}
+        />
+      </>
+    );
   }
 
   const availableSpots = spots.filter(s => !s.isOccupied);
   const isGuard = currentUser.role === 'GUARD';
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans antialiased selection:bg-emerald-500 selection:text-slate-950">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans antialiased selection:bg-emerald-500 selection:text-slate-950 transition-colors duration-200">
+      {/* Toast Notification Container */}
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 3500,
+          style: {
+            background: theme === 'dark' ? '#0F172A' : '#FFFFFF',
+            color: theme === 'dark' ? '#F8FAFC' : '#0F172A',
+            border: theme === 'dark' ? '1px solid #1E293B' : '1px solid #E2E8F0',
+            borderRadius: '12px',
+            fontSize: '13px',
+            fontWeight: 500,
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'
+          }
+        }}
+      />
+
       {/* Navigation */}
       <Navbar
         viewMode={isGuard ? 'GARITA' : viewMode}
@@ -249,14 +316,16 @@ export const App: React.FC = () => {
         setAdminTab={setAdminTab}
         currentUser={currentUser}
         onLogout={handleLogout}
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
       />
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-24 space-y-3">
-            <div className="w-10 h-10 border-4 border-slate-700 border-t-emerald-500 rounded-full animate-spin" />
-            <p className="text-sm text-slate-400">Cargando datos del sistema...</p>
+            <div className="w-10 h-10 border-4 border-slate-300 dark:border-slate-700 border-t-emerald-500 rounded-full animate-spin" />
+            <p className="text-sm text-slate-500 dark:text-slate-400">Cargando datos del sistema...</p>
           </div>
         ) : isGuard || viewMode === 'GARITA' ? (
           /* Garita Tablet View (US-601) */
@@ -317,7 +386,7 @@ export const App: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-900 bg-slate-950/80 py-4 text-center text-xs text-slate-400">
+      <footer className="border-t border-slate-200 dark:border-slate-900 bg-white dark:bg-slate-950/80 py-4 text-center text-xs text-slate-500 dark:text-slate-400 transition-colors">
         <p>
           Condominio Residencial Las Brisas &copy; {new Date().getFullYear()} &middot; Plataforma
           de Gestión Integrada &middot; Sesión activa: {currentUser.name} ({currentUser.role})

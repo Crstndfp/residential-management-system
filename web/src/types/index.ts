@@ -2,6 +2,7 @@
 // Authentication & RBAC Types
 // ==========================================
 export type UserRole = 'ADMIN' | 'BOARD' | 'GUARD' | 'RESIDENT';
+export type ThemeMode = 'light' | 'dark';
 
 export interface AuthUser {
   id: string;

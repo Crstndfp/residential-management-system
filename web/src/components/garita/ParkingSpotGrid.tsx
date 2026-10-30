@@ -11,6 +11,7 @@ import {
   User,
   Home
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { ParkingSpot, VehicleEntry } from '../../types';
 
 interface ParkingSpotGridProps {
@@ -43,10 +44,17 @@ export const ParkingSpotGrid: React.FC<ParkingSpotGridProps> = ({
   const availableCount = spots.length - occupiedCount;
   const occupancyRate = spots.length > 0 ? Math.round((occupiedCount / spots.length) * 100) : 0;
 
-  const handleExitClick = async (entryId: string, spotNumber: string) => {
+  const handleExitClick = async (entryId: string, spotNumber: string, plate?: string) => {
     try {
       setExitingId(entryId);
       await onRegisterExit(entryId, spotNumber);
+      toast.success(
+        plate
+          ? `Salida del vehículo ${plate} registrada. Espacio ${spotNumber} liberado.`
+          : `Salida registrada. Espacio ${spotNumber} liberado.`
+      );
+    } catch {
+      toast.error('Error al registrar salida');
     } finally {
       setExitingId(null);
     }
@@ -81,40 +89,40 @@ export const ParkingSpotGrid: React.FC<ParkingSpotGridProps> = ({
     <div className="space-y-6">
       {/* Overview Stat Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl flex items-center justify-between shadow-sm">
           <div>
-            <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Total Espacios</p>
-            <p className="text-2xl font-black text-white mt-1">{spots.length}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">Total Espacios</p>
+            <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">{spots.length}</p>
           </div>
-          <div className="p-3 bg-blue-500/10 text-blue-400 rounded-xl">
+          <div className="p-3 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl">
             <Car className="w-6 h-6" />
           </div>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl flex items-center justify-between shadow-sm">
           <div>
-            <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Disponibles</p>
-            <p className="text-2xl font-black text-emerald-400 mt-1">{availableCount}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">Disponibles</p>
+            <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">{availableCount}</p>
           </div>
-          <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl">
+          <div className="p-3 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl">
             <CheckCircle className="w-6 h-6" />
           </div>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl flex items-center justify-between shadow-sm">
           <div>
-            <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Ocupados</p>
-            <p className="text-2xl font-black text-rose-400 mt-1">{occupiedCount}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">Ocupados</p>
+            <p className="text-2xl font-black text-rose-600 dark:text-rose-400 mt-1">{occupiedCount}</p>
           </div>
-          <div className="p-3 bg-rose-500/10 text-rose-400 rounded-xl">
+          <div className="p-3 bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded-xl">
             <AlertCircle className="w-6 h-6" />
           </div>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl flex items-center justify-between shadow-sm">
           <div>
-            <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Tasa Ocupación</p>
-            <p className="text-2xl font-black text-amber-400 mt-1">{occupancyRate}%</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">Tasa Ocupación</p>
+            <p className="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1">{occupancyRate}%</p>
           </div>
           <div className="w-12 h-12 flex items-center justify-center relative">
             <svg className="w-12 h-12 transform -rotate-90">
@@ -122,7 +130,7 @@ export const ParkingSpotGrid: React.FC<ParkingSpotGridProps> = ({
                 cx="24"
                 cy="24"
                 r="18"
-                className="text-slate-800"
+                className="text-slate-200 dark:text-slate-800"
                 strokeWidth="4"
                 stroke="currentColor"
                 fill="transparent"
@@ -131,7 +139,7 @@ export const ParkingSpotGrid: React.FC<ParkingSpotGridProps> = ({
                 cx="24"
                 cy="24"
                 r="18"
-                className="text-amber-400 transition-all duration-500"
+                className="text-amber-500 dark:text-amber-400 transition-all duration-500"
                 strokeWidth="4"
                 strokeDasharray={113}
                 strokeDashoffset={113 - (113 * occupancyRate) / 100}
@@ -145,7 +153,7 @@ export const ParkingSpotGrid: React.FC<ParkingSpotGridProps> = ({
       </div>
 
       {/* Control Bar: Search & Action Button */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-white dark:bg-slate-900/60 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
         <div className="relative flex-1 max-w-md">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
             <Search className="w-4 h-4" />
@@ -155,7 +163,7 @@ export const ParkingSpotGrid: React.FC<ParkingSpotGridProps> = ({
             value={filterQuery}
             onChange={e => setFilterQuery(e.target.value)}
             placeholder="Buscar por placa, espacio o casa..."
-            className="w-full pl-9 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
           />
         </div>
 
@@ -172,10 +180,10 @@ export const ParkingSpotGrid: React.FC<ParkingSpotGridProps> = ({
       {/* 20-Spot Interactive Visual Grid */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-bold text-slate-200">
+          <h2 className="text-base font-bold text-slate-800 dark:text-slate-200">
             Cuadrícula Interactiva de Parqueos de Visita (P-01 al P-20)
           </h2>
-          <div className="flex items-center space-x-4 text-xs text-slate-400">
+          <div className="flex items-center space-x-4 text-xs text-slate-500 dark:text-slate-400">
             <span className="flex items-center space-x-1.5">
               <span className="w-3 h-3 rounded bg-emerald-500/20 border border-emerald-500/60"></span>
               <span>Disponible</span>
@@ -197,8 +205,8 @@ export const ParkingSpotGrid: React.FC<ParkingSpotGridProps> = ({
                 key={spot.id}
                 className={`relative flex flex-col justify-between p-3.5 rounded-xl border transition-all duration-200 ${
                   isOccupied
-                    ? 'bg-slate-900 border-rose-900/60 shadow-lg shadow-rose-950/20 hover:border-rose-700'
-                    : 'bg-slate-900/50 border-emerald-900/40 hover:border-emerald-600/60'
+                    ? 'bg-white dark:bg-slate-900 border-rose-300 dark:border-rose-900/60 shadow-sm dark:shadow-rose-950/20 hover:border-rose-500 dark:hover:border-rose-700'
+                    : 'bg-white dark:bg-slate-900/50 border-emerald-300 dark:border-emerald-900/40 hover:border-emerald-500 dark:hover:border-emerald-600/60 shadow-sm'
                 }`}
               >
                 {/* Spot Header */}
@@ -206,8 +214,8 @@ export const ParkingSpotGrid: React.FC<ParkingSpotGridProps> = ({
                   <span
                     className={`font-mono text-sm font-black px-2 py-0.5 rounded ${
                       isOccupied
-                        ? 'bg-rose-950 text-rose-300 border border-rose-800'
-                        : 'bg-emerald-950 text-emerald-300 border border-emerald-800'
+                        ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-300 dark:border-rose-800'
+                        : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
                     }`}
                   >
                     {spot.spotNumber}
@@ -216,8 +224,8 @@ export const ParkingSpotGrid: React.FC<ParkingSpotGridProps> = ({
                   <span
                     className={`text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
                       isOccupied
-                        ? 'bg-rose-500/10 text-rose-400'
-                        : 'bg-emerald-500/10 text-emerald-400'
+                        ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                        : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                     }`}
                   >
                     {isOccupied ? 'Ocupado' : 'Libre'}
@@ -228,44 +236,44 @@ export const ParkingSpotGrid: React.FC<ParkingSpotGridProps> = ({
                 {isOccupied && entry ? (
                   <div className="mt-3 space-y-2">
                     {/* Plate Display */}
-                    <div className="flex items-center justify-between bg-slate-950 px-2.5 py-1.5 rounded-lg border border-slate-800">
-                      <span className="font-mono text-base font-extrabold text-amber-300 tracking-wider">
+                    <div className="flex items-center justify-between bg-slate-100 dark:bg-slate-950 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800">
+                      <span className="font-mono text-base font-extrabold text-amber-600 dark:text-amber-300 tracking-wider">
                         {entry.plate}
                       </span>
                       {entry.isOvernight && (
                         <span
                           title="Vehículo pernoctó en el condominio"
-                          className="flex items-center text-[10px] text-amber-400 bg-amber-950/60 border border-amber-800/80 px-1.5 py-0.5 rounded font-medium"
+                          className="flex items-center text-[10px] text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800/80 px-1.5 py-0.5 rounded font-medium"
                         >
-                          <Moon className="w-3 h-3 mr-1 text-amber-400" />
+                          <Moon className="w-3 h-3 mr-1 text-amber-600 dark:text-amber-400" />
                           Noche
                         </span>
                       )}
                     </div>
 
                     {/* Metadata */}
-                    <div className="text-xs space-y-1 text-slate-300">
+                    <div className="text-xs space-y-1 text-slate-600 dark:text-slate-300">
                       <div className="flex items-center space-x-1.5 truncate">
-                        <Home className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
-                        <span className="font-medium text-slate-200 truncate">
+                        <Home className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 flex-shrink-0" />
+                        <span className="font-medium text-slate-800 dark:text-slate-200 truncate">
                           {entry.houseNumber}
                         </span>
                       </div>
                       <div className="flex items-center space-x-1.5 truncate">
-                        <User className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
-                        <span className="text-slate-400 truncate">{entry.visitorName}</span>
+                        <User className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 flex-shrink-0" />
+                        <span className="text-slate-500 dark:text-slate-400 truncate">{entry.visitorName}</span>
                       </div>
-                      <div className="flex items-center space-x-1.5 text-slate-400 text-[11px]">
-                        <Clock className="w-3 h-3 text-slate-500 flex-shrink-0" />
+                      <div className="flex items-center space-x-1.5 text-slate-400 dark:text-slate-500 text-[11px]">
+                        <Clock className="w-3 h-3 flex-shrink-0" />
                         <span>{calculateDuration(entry.entryTime)}</span>
                       </div>
                     </div>
 
                     {/* Fast 1-click Exit Button */}
                     <button
-                      onClick={() => handleExitClick(entry.id, spot.spotNumber)}
+                      onClick={() => handleExitClick(entry.id, spot.spotNumber, entry.plate)}
                       disabled={exitingId === entry.id}
-                      className="w-full mt-2 flex items-center justify-center space-x-1.5 py-1.5 px-2 bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white rounded-lg text-xs font-semibold border border-rose-700/60 hover:border-transparent transition-all"
+                      className="w-full mt-2 flex items-center justify-center space-x-1.5 py-1.5 px-2 bg-rose-50 dark:bg-rose-600/20 hover:bg-rose-600 text-rose-700 dark:text-rose-300 hover:text-white rounded-lg text-xs font-semibold border border-rose-200 dark:border-rose-700/60 hover:border-transparent transition-all"
                     >
                       <LogOut className="w-3.5 h-3.5" />
                       <span>{exitingId === entry.id ? 'Registrando...' : 'Registrar Salida'}</span>
@@ -273,8 +281,8 @@ export const ParkingSpotGrid: React.FC<ParkingSpotGridProps> = ({
                   </div>
                 ) : (
                   <div className="my-6 flex flex-col items-center justify-center text-center">
-                    <Car className="w-8 h-8 text-slate-700" />
-                    <span className="text-xs text-slate-500 mt-1">Listo para asignar</span>
+                    <Car className="w-8 h-8 text-slate-300 dark:text-slate-700" />
+                    <span className="text-xs text-slate-400 dark:text-slate-500 mt-1">Listo para asignar</span>
                   </div>
                 )}
               </div>
@@ -284,19 +292,19 @@ export const ParkingSpotGrid: React.FC<ParkingSpotGridProps> = ({
       </div>
 
       {/* Active Vehicles List Table */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden mt-6">
-        <div className="px-6 py-4 bg-slate-800/40 border-b border-slate-800 flex items-center justify-between">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm mt-6">
+        <div className="px-6 py-4 bg-slate-50 dark:bg-slate-800/40 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <Car className="w-5 h-5 text-emerald-400" />
-            <h3 className="font-bold text-white text-base">
+            <Car className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <h3 className="font-bold text-slate-900 dark:text-white text-base">
               Lista Detallada de Vehículos de Visita Activos ({activeEntries.length})
             </h3>
           </div>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-slate-300">
-            <thead className="bg-slate-950/60 text-xs uppercase tracking-wider text-slate-400 border-b border-slate-800">
+          <table className="w-full text-left text-sm text-slate-700 dark:text-slate-300">
+            <thead className="bg-slate-100 dark:bg-slate-950/60 text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
               <tr>
                 <th className="px-6 py-3">Espacio</th>
                 <th className="px-6 py-3">Placa</th>
@@ -307,46 +315,46 @@ export const ParkingSpotGrid: React.FC<ParkingSpotGridProps> = ({
                 <th className="px-6 py-3 text-right">Acción</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800">
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
               {activeEntries.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-slate-500 text-sm">
+                  <td colSpan={7} className="px-6 py-8 text-center text-slate-400 text-sm">
                     No hay vehículos de visita estacionados actualmente en el residencial.
                   </td>
                 </tr>
               ) : (
                 activeEntries.map(entry => (
-                  <tr key={entry.id} className="hover:bg-slate-800/40 transition">
+                  <tr key={entry.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
                     <td className="px-6 py-4">
-                      <span className="font-mono font-bold bg-slate-800 px-2 py-1 rounded text-white text-xs border border-slate-700">
+                      <span className="font-mono font-bold bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-slate-800 dark:text-white text-xs border border-slate-200 dark:border-slate-700">
                         {entry.spotNumber}
                       </span>
                     </td>
-                    <td className="px-6 py-4 font-mono font-bold text-amber-300 text-sm">
+                    <td className="px-6 py-4 font-mono font-bold text-amber-600 dark:text-amber-300 text-sm">
                       {entry.plate}
                     </td>
-                    <td className="px-6 py-4 text-white font-medium">{entry.houseNumber}</td>
+                    <td className="px-6 py-4 text-slate-900 dark:text-white font-medium">{entry.houseNumber}</td>
                     <td className="px-6 py-4">
-                      <div className="text-white font-medium">{entry.visitorName}</div>
-                      <div className="text-xs text-slate-400">{entry.visitorIdDocument}</div>
+                      <div className="text-slate-900 dark:text-white font-medium">{entry.visitorName}</div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400">{entry.visitorIdDocument}</div>
                     </td>
-                    <td className="px-6 py-4 text-slate-300 text-xs">
+                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300 text-xs">
                       {new Date(entry.entryTime).toLocaleTimeString([], {
                         hour: '2-digit',
                         minute: '2-digit'
                       })}
                     </td>
                     <td className="px-6 py-4">
-                      <span className="inline-flex items-center text-xs text-slate-300 bg-slate-800 px-2.5 py-1 rounded-md">
+                      <span className="inline-flex items-center text-xs text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md">
                         <Clock className="w-3 h-3 mr-1 text-slate-400" />
                         {calculateDuration(entry.entryTime)}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <button
-                        onClick={() => handleExitClick(entry.id, entry.spotNumber)}
+                        onClick={() => handleExitClick(entry.id, entry.spotNumber, entry.plate)}
                         disabled={exitingId === entry.id}
-                        className="px-3 py-1.5 bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white rounded-lg text-xs font-semibold border border-rose-700/60 hover:border-transparent transition"
+                        className="px-3 py-1.5 bg-rose-50 dark:bg-rose-600/20 hover:bg-rose-600 text-rose-700 dark:text-rose-300 hover:text-white rounded-lg text-xs font-semibold border border-rose-200 dark:border-rose-700/60 hover:border-transparent transition"
                       >
                         {exitingId === entry.id ? 'Registrando...' : 'Marcar Salida'}
                       </button>
