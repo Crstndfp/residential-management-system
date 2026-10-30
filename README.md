@@ -150,7 +150,7 @@ docker run --rm -v ~/.m2:/root/.m2 -v $(pwd)/services/amenities-service:/app -w 
 
 ## 7. Portal Web Administrativo y de Garita (React + TypeScript + Tailwind CSS)
 
-Ubicado en el directorio [`web/`](web/), esta aplicación web moderna (SPA) desarrollada con **React 18**, **TypeScript**, **Tailwind CSS** y empaquetada con **Vite**, provee una interfaz unificada protegida con **Autenticación Obligatoria y Control de Acceso Basado en Roles (RBAC)**:
+Ubicado en el directorio [`web/`](web/), esta aplicación web moderna (SPA) desarrollada con **React 18**, **TypeScript**, **Tailwind CSS**, sistema de alertas reactivas con **`react-hot-toast`**, **soporte para Tema Claro y Tema Oscuro** y empaquetada con **Vite**, provee una interfaz unificada protegida con **Autenticación Obligatoria y Control de Acceso Basado en Roles (RBAC)**:
 
 ### Credenciales de Demostración del Sistema
 

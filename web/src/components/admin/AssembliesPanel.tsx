@@ -9,6 +9,7 @@ import {
   FileCheck2,
   Calendar
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { Assembly, AssemblyQuorum, AssemblyMotion, CloseMotionResult } from '../../types';
 
 interface AssembliesPanelProps {
@@ -45,7 +46,10 @@ export const AssembliesPanel: React.FC<AssembliesPanelProps> = ({
     try {
       setIsRegisteringAttendance(true);
       await onRegisterAttendance(houseToRegister.trim());
+      toast.success(`Asistencia confirmada para ${houseToRegister.trim()}`);
       setHouseToRegister('');
+    } catch {
+      toast.error('Error al registrar asistencia');
     } finally {
       setIsRegisteringAttendance(false);
     }
@@ -57,9 +61,12 @@ export const AssembliesPanel: React.FC<AssembliesPanelProps> = ({
     try {
       setIsCreatingMotion(true);
       await onCreateMotion(newMotionTitle.trim(), newMotionDesc.trim());
+      toast.success('Moción creada y agregada a la agenda');
       setNewMotionTitle('');
       setNewMotionDesc('');
       setShowNewMotionModal(false);
+    } catch {
+      toast.error('Error al crear moción');
     } finally {
       setIsCreatingMotion(false);
     }
@@ -69,6 +76,9 @@ export const AssembliesPanel: React.FC<AssembliesPanelProps> = ({
     try {
       setActionLoadingId(motionId);
       await onOpenMotion(motionId);
+      toast.success('Votación abierta a los condóminos');
+    } catch {
+      toast.error('Error al abrir la votación');
     } finally {
       setActionLoadingId(null);
     }
@@ -79,6 +89,9 @@ export const AssembliesPanel: React.FC<AssembliesPanelProps> = ({
       setActionLoadingId(motionId);
       const res = await onCloseMotion(motionId);
       setClosedResults(prev => ({ ...prev, [motionId]: res }));
+      toast.success(`Escrutinio completado: Dictamen ${res.verdict}`);
+    } catch {
+      toast.error('Error al cerrar la moción');
     } finally {
       setActionLoadingId(null);
     }
@@ -90,42 +103,42 @@ export const AssembliesPanel: React.FC<AssembliesPanelProps> = ({
   return (
     <div className="space-y-6">
       {/* Top Banner: Assembly Overview & Quorum Gauge */}
-      <div className="bg-gradient-to-r from-blue-950/60 via-slate-900 to-slate-900 border border-blue-900/40 p-6 rounded-2xl shadow-xl">
+      <div className="bg-gradient-to-r from-blue-50 via-white to-white dark:from-blue-950/60 dark:via-slate-900 dark:to-slate-900 border border-blue-200 dark:border-blue-900/40 p-6 rounded-2xl shadow-sm dark:shadow-xl transition-colors">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-2">
-            <div className="flex items-center space-x-2 text-blue-400 font-bold text-xs uppercase tracking-wider">
+            <div className="flex items-center space-x-2 text-blue-600 dark:text-blue-400 font-bold text-xs uppercase tracking-wider">
               <Vote className="w-4 h-4" />
               <span>Gobernanza &middot; Épica 4 (US-401, US-402, US-403)</span>
             </div>
-            <h2 className="text-2xl font-black text-white tracking-tight">{assembly.title}</h2>
-            <div className="flex flex-wrap items-center gap-3 text-xs text-slate-300">
-              <span className="flex items-center space-x-1 bg-slate-800 px-2.5 py-1 rounded-md border border-slate-700">
-                <Calendar className="w-3.5 h-3.5 text-blue-400" />
+            <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{assembly.title}</h2>
+            <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600 dark:text-slate-300">
+              <span className="flex items-center space-x-1 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-700">
+                <Calendar className="w-3.5 h-3.5 text-blue-500" />
                 <span>{new Date(assembly.scheduledAt).toLocaleDateString()}</span>
               </span>
-              <span className="bg-blue-950 text-blue-300 border border-blue-800 px-2.5 py-1 rounded-md font-semibold">
+              <span className="bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800 px-2.5 py-1 rounded-md font-semibold">
                 Tipo: {assembly.assemblyType}
               </span>
-              <span className="bg-emerald-950 text-emerald-300 border border-emerald-800 px-2.5 py-1 rounded-md font-semibold">
+              <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 px-2.5 py-1 rounded-md font-semibold">
                 Estado: {assembly.status}
               </span>
             </div>
           </div>
 
           {/* Quorum Visual Thermometer */}
-          <div className="bg-slate-950/90 border border-slate-800 p-5 rounded-2xl min-w-[320px] space-y-3">
+          <div className="bg-white dark:bg-slate-950/90 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl min-w-[320px] space-y-3 shadow-sm">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <Users className="w-4 h-4 text-blue-400" />
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                   Control de Quórum Legal
                 </span>
               </div>
               <span
                 className={`text-xs font-black px-2 py-0.5 rounded-full ${
                   hasQuorum
-                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                    : 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
+                    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/40'
+                    : 'bg-amber-50 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 border border-amber-200 dark:border-amber-500/40'
                 }`}
               >
                 {hasQuorum ? 'VÁLIDA (≥ 50%)' : 'SIN QUÓRUM'}
@@ -135,18 +148,18 @@ export const AssembliesPanel: React.FC<AssembliesPanelProps> = ({
             {/* Quorum Progress Bar */}
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs">
-                <span className="text-slate-400">
-                  Presentes: <strong className="text-white">{quorum.presentHouses}</strong> de{' '}
+                <span className="text-slate-500 dark:text-slate-400">
+                  Presentes: <strong className="text-slate-900 dark:text-white">{quorum.presentHouses}</strong> de{' '}
                   {quorum.totalResidentialHouses} casas
                 </span>
-                <span className="font-mono font-bold text-base text-blue-400">
+                <span className="font-mono font-bold text-base text-blue-600 dark:text-blue-400">
                   {quorumPercentage}%
                 </span>
               </div>
-              <div className="relative w-full h-3.5 bg-slate-800 rounded-full overflow-hidden">
+              <div className="relative w-full h-3.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                 {/* 50% Quorum Indicator Marker */}
                 <div
-                  className="absolute top-0 bottom-0 w-0.5 bg-white/70 z-10"
+                  className="absolute top-0 bottom-0 w-0.5 bg-slate-400 dark:bg-white/70 z-10"
                   style={{ left: '50%' }}
                   title="Mínimo legal de 50%"
                 />
@@ -159,9 +172,9 @@ export const AssembliesPanel: React.FC<AssembliesPanelProps> = ({
                   style={{ width: `${Math.min(quorumPercentage, 100)}%` }}
                 />
               </div>
-              <div className="flex justify-between text-[10px] text-slate-500">
+              <div className="flex justify-between text-[10px] text-slate-400 dark:text-slate-500">
                 <span>0%</span>
-                <span className="text-slate-400 font-semibold">Meta Legal: 50%</span>
+                <span className="text-slate-600 dark:text-slate-400 font-semibold">Meta Legal: 50%</span>
                 <span>100%</span>
               </div>
             </div>
@@ -173,7 +186,7 @@ export const AssembliesPanel: React.FC<AssembliesPanelProps> = ({
                 value={houseToRegister}
                 onChange={e => setHouseToRegister(e.target.value)}
                 placeholder="Ej. Casa 114"
-                className="flex-1 px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-xs placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-xs placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <button
                 type="submit"
@@ -191,11 +204,11 @@ export const AssembliesPanel: React.FC<AssembliesPanelProps> = ({
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-bold text-white flex items-center space-x-2">
-              <Award className="w-5 h-5 text-blue-400" />
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+              <Award className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               <span>Mociones y Puntos de Votación (US-402 &amp; US-403)</span>
             </h3>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Votación ponderada con registro auditable y sellado criptográfico SHA-256
             </p>
           </div>
@@ -219,40 +232,40 @@ export const AssembliesPanel: React.FC<AssembliesPanelProps> = ({
             return (
               <div
                 key={motion.id}
-                className="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col justify-between space-y-4 shadow-lg hover:border-slate-700 transition"
+                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 flex flex-col justify-between space-y-4 shadow-sm dark:shadow-lg hover:border-slate-300 dark:hover:border-slate-700 transition"
               >
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="font-mono text-[11px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded border border-slate-700">
+                    <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">
                       {motion.id}
                     </span>
                     <span
                       className={`text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
                         isOpen
-                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 animate-pulse'
+                          ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/40 animate-pulse'
                           : isClosed
-                          ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40'
-                          : 'bg-slate-700/50 text-slate-300 border border-slate-600'
+                          ? 'bg-purple-50 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-500/40'
+                          : 'bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600'
                       }`}
                     >
                       {isOpen ? 'Votación Abierta' : isClosed ? 'Escrutinio Cerrado' : 'Pendiente'}
                     </span>
                   </div>
 
-                  <h4 className="font-bold text-white text-base leading-snug">{motion.title}</h4>
-                  <p className="text-xs text-slate-400 mt-1 line-clamp-3">{motion.description}</p>
+                  <h4 className="font-bold text-slate-900 dark:text-white text-base leading-snug">{motion.title}</h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-3">{motion.description}</p>
                 </div>
 
                 {/* Escrutinio / Results Display if Closed */}
                 {(isClosed || result) && (
-                  <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+                  <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-slate-400 font-semibold uppercase">Dictamen:</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase">Dictamen:</span>
                       <span
                         className={`text-xs font-black px-2.5 py-0.5 rounded ${
                           (result?.verdict || motion.verdict) === 'APPROVED'
-                            ? 'bg-emerald-950 text-emerald-300 border border-emerald-700'
-                            : 'bg-rose-950 text-rose-300 border border-rose-700'
+                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700'
+                            : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-300 dark:border-rose-700'
                         }`}
                       >
                         {(result?.verdict || motion.verdict) === 'APPROVED' ? 'APROBADA' : 'RECHAZADA'}
@@ -260,32 +273,32 @@ export const AssembliesPanel: React.FC<AssembliesPanelProps> = ({
                     </div>
 
                     <div className="grid grid-cols-3 gap-2 text-center pt-1">
-                      <div className="bg-slate-900 p-2 rounded-lg border border-slate-800">
-                        <span className="block text-emerald-400 font-bold text-sm">
+                      <div className="bg-white dark:bg-slate-900 p-2 rounded-lg border border-slate-200 dark:border-slate-800">
+                        <span className="block text-emerald-600 dark:text-emerald-400 font-bold text-sm">
                           {result?.inFavorCount ?? 22}
                         </span>
-                        <span className="text-[10px] text-slate-400">A Favor</span>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400">A Favor</span>
                       </div>
-                      <div className="bg-slate-900 p-2 rounded-lg border border-slate-800">
-                        <span className="block text-rose-400 font-bold text-sm">
+                      <div className="bg-white dark:bg-slate-900 p-2 rounded-lg border border-slate-200 dark:border-slate-800">
+                        <span className="block text-rose-600 dark:text-rose-400 font-bold text-sm">
                           {result?.againstCount ?? 3}
                         </span>
-                        <span className="text-[10px] text-slate-400">En Contra</span>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400">En Contra</span>
                       </div>
-                      <div className="bg-slate-900 p-2 rounded-lg border border-slate-800">
-                        <span className="block text-slate-400 font-bold text-sm">
+                      <div className="bg-white dark:bg-slate-900 p-2 rounded-lg border border-slate-200 dark:border-slate-800">
+                        <span className="block text-slate-500 dark:text-slate-400 font-bold text-sm">
                           {result?.abstainCount ?? 1}
                         </span>
-                        <span className="text-[10px] text-slate-400">Abstenciones</span>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400">Abstenciones</span>
                       </div>
                     </div>
 
-                    <div className="pt-2 flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-800/80">
-                      <div className="flex items-center space-x-1 text-teal-400">
+                    <div className="pt-2 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 border-t border-slate-200 dark:border-slate-800/80">
+                      <div className="flex items-center space-x-1 text-teal-600 dark:text-teal-400 font-medium">
                         <FileCheck2 className="w-3.5 h-3.5" />
                         <span>Sello SHA-256 Auditado</span>
                       </div>
-                      <span className="font-mono text-[10px] text-slate-500 truncate max-w-[140px]">
+                      <span className="font-mono text-[10px] text-slate-400 dark:text-slate-500 truncate max-w-[140px]">
                         e3b0c44298fc1c149afbf4c8...
                       </span>
                     </div>
@@ -293,7 +306,7 @@ export const AssembliesPanel: React.FC<AssembliesPanelProps> = ({
                 )}
 
                 {/* Actions Bar */}
-                <div className="pt-2 border-t border-slate-800 flex items-center justify-end space-x-2">
+                <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end space-x-2">
                   {isPending && (
                     <button
                       onClick={() => handleOpenMotionClick(motion.id)}
@@ -324,16 +337,16 @@ export const AssembliesPanel: React.FC<AssembliesPanelProps> = ({
 
       {/* Modal: Create Motion */}
       {showNewMotionModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4">
-            <h3 className="text-lg font-bold text-white flex items-center space-x-2">
-              <Vote className="w-5 h-5 text-blue-400" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4 transition-colors">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+              <Vote className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               <span>Redactar Nueva Moción de Asamblea</span>
             </h3>
 
             <form onSubmit={handleCreateMotionSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
                   Título de la Moción *
                 </label>
                 <input
@@ -342,12 +355,12 @@ export const AssembliesPanel: React.FC<AssembliesPanelProps> = ({
                   value={newMotionTitle}
                   onChange={e => setNewMotionTitle(e.target.value)}
                   placeholder="Ej. Adquisición de Generador Eléctrico para Garita"
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
                   Descripción y Justificación *
                 </label>
                 <textarea
@@ -356,7 +369,7 @@ export const AssembliesPanel: React.FC<AssembliesPanelProps> = ({
                   value={newMotionDesc}
                   onChange={e => setNewMotionDesc(e.target.value)}
                   placeholder="Detalles de la cotización, impacto en la cuota extraordinaria y plazos..."
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
@@ -364,7 +377,7 @@ export const AssembliesPanel: React.FC<AssembliesPanelProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowNewMotionModal(false)}
-                  className="px-4 py-2 text-sm text-slate-300 hover:text-white"
+                  className="px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
                 >
                   Cancelar
                 </button>
